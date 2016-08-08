@@ -17,6 +17,22 @@ func TestMain(m *testing.M) {
 	os.Exit(retCode)
 }
 
+func TestAppendInvalidORder(t *testing.T) {
+
+	require := require.New(t)
+
+	book := models.NewOrderBook()
+
+	ap := NewOrderAppender()
+
+	order := models.NewOrder(uuid.NewV4(), "TT", 199.99, 10, models.Sell)
+	order.Status = models.FullyFilled
+
+	err:=ap.Append(book, order)
+
+	require.NotNil(err)
+}
+
 func TestAppendNewSymbol(t *testing.T) {
 
 	require := require.New(t)
