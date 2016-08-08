@@ -10,3 +10,10 @@ type OrderQuantity struct {
 func NewOrderQuantity() *OrderQuantity {
 	return &OrderQuantity{0, make([]Order, 0)}
 }
+
+// Add order
+func (oq *OrderQuantity) Add(order *Order) {
+
+	oq.Quantity += order.Quantity
+	oq.Orders = append(oq.Orders, *order)
+}

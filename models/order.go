@@ -21,9 +21,7 @@ type Order struct {
 
 // NewOrder creates a new order
 func NewOrder(id uuid.UUID, symbol string, price float64, quantity uint, direction TradeDirection) *Order {
-	order := Order{id, symbol, price, quantity, 0, direction, Pending, adaptlog.NewStdLevelLogger("Order")}
-	order.SetStatus()
-	return &order
+	return &Order{id, symbol, price, quantity, 0, direction, Pending, adaptlog.NewStdLevelLogger("Order")}
 }
 
 // NewOrderFull creates a new order with all parameters

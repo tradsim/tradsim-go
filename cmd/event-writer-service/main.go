@@ -14,8 +14,8 @@ import (
 	incatamodel "github.com/mantzas/incata/model"
 	"github.com/mantzas/incata/storage"
 	"github.com/mantzas/incata/writer"
-	"github.com/tradsim/tradsim-go/events"
 	"github.com/satori/go.uuid"
+	"github.com/tradsim/tradsim-go/events"
 )
 
 func main() {

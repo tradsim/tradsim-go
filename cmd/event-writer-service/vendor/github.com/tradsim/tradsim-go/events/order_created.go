@@ -2,8 +2,8 @@ package events
 
 import (
 	"fmt"
-	"time"
 	"github.com/tradsim/tradsim-go/models"
+	"time"
 )
 
 // OrderCreated defines a order created event

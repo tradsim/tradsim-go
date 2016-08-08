@@ -1,13 +1,12 @@
 package handlers
 
 import (
-
 	"github.com/mantzas/adaptlog"
 )
 
 // OrderHandler handles orders
 type OrderHandler struct {
-	logger    adaptlog.LevelLogger
+	logger adaptlog.LevelLogger
 	//processor trading.Processor
 }
 

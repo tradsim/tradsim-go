@@ -13,14 +13,14 @@ func TestOrderString(t *testing.T) {
 
 	order := getOrder(10, 10)
 
-	assert.Equal(order.String(), "[d1de4242-6620-4030-b2a7-4a701631c3ba] TT@199.99 Buy 10 Pending")
+	assert.Equal("[d1de4242-6620-4030-b2a7-4a701631c3ba] TT@199.990000 Buy 10 Pending", order.String())
 }
 
 func TestOrderSetStatusPending(t *testing.T) {
 
 	assert := assert.New(t)
 
-	order := getOrder(10, 10)	
+	order := getOrder(10, 0)
 	order.SetStatus()
 
 	assert.Equal(order.Status, Pending)
@@ -30,7 +30,7 @@ func TestOrderSetStatusPartiallyFilled(t *testing.T) {
 
 	assert := assert.New(t)
 
-	order := getOrder(5, 10)
+	order := getOrder(10, 5)
 	order.SetStatus()
 
 	assert.Equal(order.Status, PartiallyFilled)
@@ -40,7 +40,7 @@ func TestOrderSetStatusFullyFilled(t *testing.T) {
 
 	assert := assert.New(t)
 
-	order := getOrder(0, 10)
+	order := getOrder(10, 10)
 	order.SetStatus()
 
 	assert.Equal(order.Status, FullyFilled)
@@ -50,10 +50,10 @@ func TestOrderSetStatusOverFilled(t *testing.T) {
 
 	assert := assert.New(t)
 
-	order := getOrder(0, 10)
+	order := getOrder(10, 12)
 	order.SetStatus()
 
-	assert.Equal(order.Status, FullyFilled)
+	assert.Equal(order.Status, OverFilled)
 }
 
 func getOrder(quantity uint, traded uint) *Order {
