@@ -29,6 +29,17 @@ func NewOrderFull(id uuid.UUID, symbol string, price float64, quantity uint, tra
 	return &Order{id, symbol, price, quantity, traded, direction, orderStatus, adaptlog.NewStdLevelLogger("Order")}
 }
 
+// Remaining return the reamining quantity
+func (o *Order) Remaining() uint {
+	return o.Quantity - o.Traded
+}
+
+// Trade the quantity against the order
+func (o *Order) Trade(quantity uint) {
+	o.Traded += quantity
+	o.SetStatus()
+}
+
 func (o *Order) String() string {
 	return fmt.Sprintf("[%s] %s@%f %s %d %s", o.ID, o.Symbol, o.Price, o.Direction.String(), o.Quantity, o.Status.String())
 }

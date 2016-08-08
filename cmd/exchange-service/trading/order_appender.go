@@ -34,8 +34,8 @@ func (oa *OrderAppender) Append(book *models.OrderBook, order *models.Order) err
 		oa.logger.Debugf("Symbol %s not found, adding symbol", order.Symbol)
 		oa.addNewSymbol(book, order)
 		return nil
-	} 
-    oa.logger.Debugf("Symbol %s found", order.Symbol)
+	}
+	oa.logger.Debugf("Symbol %s found", order.Symbol)
 
 	found, i := findPrice(prices, order.Price)
 
@@ -51,14 +51,14 @@ func (oa *OrderAppender) Append(book *models.OrderBook, order *models.Order) err
 			prices = append(prices, *price)
 			oa.logger.Debugf("Price %f appended to the end", order.Price)
 		} else { // append at i
-            oa.logger.Debugf("Price %f appended at %d", order.Price, i)
-            if i == 0 {
-                prices = append([]models.OrderPrice{*price}, prices...)    
-            } else {
-                prices = append(prices[:i], append([]models.OrderPrice{*price}, prices[i:]...)...)
-            }			            
+			oa.logger.Debugf("Price %f appended at %d", order.Price, i)
+			if i == 0 {
+				prices = append([]models.OrderPrice{*price}, prices...)
+			} else {
+				prices = append(prices[:i], append([]models.OrderPrice{*price}, prices[i:]...)...)
+			}
 		}
-        book.Symbols[order.Symbol] = prices
+		book.Symbols[order.Symbol] = prices
 	}
 
 	return nil

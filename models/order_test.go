@@ -16,6 +16,28 @@ func TestOrderString(t *testing.T) {
 	assert.Equal("[d1de4242-6620-4030-b2a7-4a701631c3ba] TT@199.990000 Buy 10 Pending", order.String())
 }
 
+func TestRemaining(t *testing.T) {
+
+	assert := assert.New(t)
+
+	order := getOrder(10, 2)
+
+	assert.Equal(uint(8), order.Remaining())
+}
+
+func TestTrade(t *testing.T) {
+
+	assert := assert.New(t)
+
+	order := getOrder(10, 0)
+
+	order.Trade(4)
+
+	assert.Equal(uint(4), order.Traded)
+	assert.Equal(uint(6), order.Remaining())
+	assert.Equal(PartiallyFilled, order.Status)
+}
+
 func TestOrderSetStatusPending(t *testing.T) {
 
 	assert := assert.New(t)

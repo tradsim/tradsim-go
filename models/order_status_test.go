@@ -27,21 +27,31 @@ func TestOrderStatusString(t *testing.T) {
 
 var orderStatusFromStringTests = []struct {
 	in  string
-	out struct { 
-		status OrderStatus 
+	out struct {
+		status   OrderStatus
 		hasError bool
-	} 
+	}
 }{
-	{"Pending", struct{status OrderStatus 
-					   hasError bool}{Pending,false}},
-	{"PartiallyFilled", struct{status OrderStatus 
-					   hasError bool}{PartiallyFilled,false}},
-	{"FullyFilled", struct{status OrderStatus 
-					   hasError bool}{FullyFilled,false}},
-	{"OverFilled", struct{status OrderStatus 
-					   hasError bool}{OverFilled,false}},
-	{"9", struct{status OrderStatus 
-					   hasError bool}{OverFilled,true}},
+	{"Pending", struct {
+		status   OrderStatus
+		hasError bool
+	}{Pending, false}},
+	{"PartiallyFilled", struct {
+		status   OrderStatus
+		hasError bool
+	}{PartiallyFilled, false}},
+	{"FullyFilled", struct {
+		status   OrderStatus
+		hasError bool
+	}{FullyFilled, false}},
+	{"OverFilled", struct {
+		status   OrderStatus
+		hasError bool
+	}{OverFilled, false}},
+	{"9", struct {
+		status   OrderStatus
+		hasError bool
+	}{OverFilled, true}},
 }
 
 func TestOrderStatusFromString(t *testing.T) {
@@ -51,12 +61,12 @@ func TestOrderStatusFromString(t *testing.T) {
 		status, err := OrderStatusFromString(tt.in)
 
 		require := require.New(t)
-		
+
 		if tt.out.hasError {
-			require.NotNil(err)			
+			require.NotNil(err)
 		} else {
 			require.Nil(err)
 			require.Equal(tt.out.status, status, "Expected %v but got %v", tt.out.status, status)
-		}		
+		}
 	}
 }
