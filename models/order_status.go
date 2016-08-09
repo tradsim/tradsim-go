@@ -36,6 +36,16 @@ func (o OrderStatus) String() string {
 	}
 }
 
+// IsTradeable return true if status allows trading
+func (o OrderStatus) IsTradeable() bool {
+	switch o {
+	case Pending, PartiallyFilled:
+		return true
+	default:
+		return false
+	}
+}
+
 // OrderStatusFromString returns a order status from string
 func OrderStatusFromString(value string) (OrderStatus, error) {
 	switch value {

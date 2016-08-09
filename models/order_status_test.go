@@ -6,6 +6,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var orderStatusTradeableTests = []struct {
+	in  OrderStatus
+	out bool
+}{
+	{Pending, true},
+	{PartiallyFilled, true},
+	{FullyFilled, false},
+	{OverFilled, false},
+}
+
+func TestOrderStatusIsTradeable(t *testing.T) {
+
+	for _, tt := range orderStatusTradeableTests {
+
+		require.Equal(t, tt.out, tt.in.IsTradeable(), "Expected %b but got %b", tt.out, tt.in.IsTradeable())
+	}
+}
+
 var orderStatusTests = []struct {
 	in  OrderStatus
 	out string

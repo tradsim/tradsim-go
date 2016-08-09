@@ -11,7 +11,7 @@ import (
 
 // Trader interface
 type Trader interface {
-	Trade(book *models.OrderBook, order *models.Order) (*models.Order, error)
+	Trade(book *models.OrderBook, order *models.Order)
 }
 
 // OrderTrader implementation
