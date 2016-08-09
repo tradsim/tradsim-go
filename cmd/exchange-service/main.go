@@ -40,7 +40,7 @@ func main() {
 	orderBook := models.NewOrderBook()
 	appender := trading.NewOrderAppender()
 	trader := trading.NewOrderTrader(publisher)
-	orderHandler := handlers.NewOrderHandler(orderBook, appender, trader)
+	orderHandler := handlers.NewOrderHandler(orderBook, appender, trader, publisher)
 	// orderBookHandler := handlers.NewOrderBookHandler(orderBook)
 
 	router := httprouter.New()

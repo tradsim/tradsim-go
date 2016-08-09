@@ -80,7 +80,7 @@ func (p *OrderEventProcessor) Process() error {
 		}
 
 		err = p.processor(&envelope)
-		if err == nil {
+		if err != nil {
 			p.logger.Errorf("Failed to process envelope %s", err)
 		} else {
 			d.Ack(false)
