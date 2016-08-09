@@ -33,6 +33,7 @@ func (ot *OrderTrader) Trade(book *models.OrderBook, order *models.Order) {
 		ot.logger.Debugf("Symbol %s not in book", order.Symbol)
 		return
 	}
+	ot.logger.Debugf("Symbol %s found", order.Symbol)
 
 	if order.Direction == models.Buy {
 		ot.tradePricesBuy(prices, order)
@@ -41,34 +42,52 @@ func (ot *OrderTrader) Trade(book *models.OrderBook, order *models.Order) {
 	}
 }
 
-func (ot *OrderTrader) tradePricesBuy(prices []models.OrderPrice, order *models.Order) {
+func (ot *OrderTrader) tradePricesBuy(prices []*models.OrderPrice, order *models.Order) {
 	for _, price := range prices {
 		if price.Price > order.Price {
+			ot.logger.Debugf("Price %f is greater than order price %f", price.Price, order.Price)
 			return
 		}
-		ot.tradePrice(&price, order)
+		ot.logger.Debugf("Trading with price %f. order price %f", price.Price, order.Price)
+		ot.tradePrice(price, order)
 	}
 }
 
-func (ot *OrderTrader) tradePricesSell(prices []models.OrderPrice, order *models.Order) {
+func (ot *OrderTrader) tradePricesSell(prices []*models.OrderPrice, order *models.Order) {
 
 	for i := len(prices) - 1; i >= 0; i-- {
 		if prices[i].Price < order.Price {
+			ot.logger.Debugf("Price %f is less than order price %f", prices[i].Price, order.Price)
 			return
 		}
-		ot.tradePrice(&prices[i], order)
+		ot.logger.Debugf("Trading with price %f. order price %f", prices[i].Price, order.Price)
+		ot.tradePrice(prices[i], order)
 	}
 }
 
 func (ot *OrderTrader) tradePrice(price *models.OrderPrice, order *models.Order) {
 
 	if order.Direction == models.Buy {
-		if price.Buy.Quantity > 0 {
-
+		if price.Sell.Quantity > 0 {
+			ot.logger.Debugf("Sell quantity on price %f is %d and order count %d", price.Price, price.Sell.Quantity, len(price.Sell.Orders))
+			for _, existing := range price.Sell.Orders {
+				ot.trade(existing, order)
+			}
+			price.Sell.Update()
+			ot.logger.Debugf("Sell quantity after trade on price %f is %d and order count %d", price.Price, price.Sell.Quantity, len(price.Sell.Orders))
+		} else {
+			ot.logger.Debugf("Sell quantity on price %f is zero", price.Price)
 		}
 	} else {
-		if price.Sell.Quantity > 0 {
-
+		if price.Buy.Quantity > 0 {
+			ot.logger.Debugf("Buy quantity on price %f is %d and order count %d", price.Price, price.Buy.Quantity, len(price.Buy.Orders))
+			for _, existing := range price.Buy.Orders {
+				ot.trade(existing, order)
+			}
+			price.Buy.Update()
+			ot.logger.Debugf("Buy quantity after trade on price %f is %d and order count %d", price.Price, price.Buy.Quantity, len(price.Buy.Orders))
+		} else {
+			ot.logger.Debugf("Buy quantity on price %f is zero", price.Price)
 		}
 	}
 }
@@ -76,8 +95,11 @@ func (ot *OrderTrader) tradePrice(price *models.OrderPrice, order *models.Order)
 func (ot *OrderTrader) trade(existing *models.Order, new *models.Order) {
 	traded := uint(0)
 
-	if existing.Remaining() >= new.Quantity {
-		traded = new.Quantity
+	ot.logger.Debugf("Existing %v", *existing)
+	ot.logger.Debugf("New %v", *new)
+
+	if existing.Remaining() >= new.Remaining() {
+		traded = new.Remaining()
 	} else {
 		traded = existing.Remaining()
 	}

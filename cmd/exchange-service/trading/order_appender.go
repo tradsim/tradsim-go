@@ -2,6 +2,7 @@ package trading
 
 import (
 	"errors"
+
 	"github.com/mantzas/adaptlog"
 	"github.com/tradsim/tradsim-go/models"
 )
@@ -25,6 +26,7 @@ func NewOrderAppender() *OrderAppender {
 func (oa *OrderAppender) Append(book *models.OrderBook, order *models.Order) error {
 
 	if order.Status != models.Pending {
+
 		return errors.New("Order status is not pending")
 	}
 
@@ -48,14 +50,14 @@ func (oa *OrderAppender) Append(book *models.OrderBook, order *models.Order) err
 		price.AddOrder(order)
 
 		if i == len(prices) { //append to the end
-			prices = append(prices, *price)
+			prices = append(prices, price)
 			oa.logger.Debugf("Price %f appended to the end", order.Price)
 		} else { // append at i
 			oa.logger.Debugf("Price %f appended at %d", order.Price, i)
 			if i == 0 {
-				prices = append([]models.OrderPrice{*price}, prices...)
+				prices = append([]*models.OrderPrice{price}, prices...)
 			} else {
-				prices = append(prices[:i], append([]models.OrderPrice{*price}, prices[i:]...)...)
+				prices = append(prices[:i], append([]*models.OrderPrice{price}, prices[i:]...)...)
 			}
 		}
 		book.Symbols[order.Symbol] = prices
@@ -67,7 +69,7 @@ func (oa *OrderAppender) Append(book *models.OrderBook, order *models.Order) err
 // this function returns the following
 // found == true and index when price found
 // found == false and at which index should it be inserted
-func findPrice(prices []models.OrderPrice, price float64) (bool, int) {
+func findPrice(prices []*models.OrderPrice, price float64) (bool, int) {
 
 	for i := 0; i < len(prices); i++ {
 		if prices[i].Price == price {
@@ -84,6 +86,6 @@ func (oa *OrderAppender) addNewSymbol(book *models.OrderBook, order *models.Orde
 
 	price := models.NewOrderPrice(order.Price)
 	price.AddOrder(order)
-	book.Symbols[order.Symbol] = []models.OrderPrice{*price}
+	book.Symbols[order.Symbol] = []*models.OrderPrice{price}
 	oa.logger.Debugf("addNewSymbol: Symbol %s appended", order.Symbol)
 }

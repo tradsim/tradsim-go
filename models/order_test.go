@@ -11,9 +11,9 @@ func TestOrderString(t *testing.T) {
 
 	assert := assert.New(t)
 
-	order := getOrder(10, 10)
+	order := getOrder(10, 0)
 
-	assert.Equal("[d1de4242-6620-4030-b2a7-4a701631c3ba] TT@199.990000 Buy 10 Pending", order.String())
+	assert.Equal("[d1de4242-6620-4030-b2a7-4a701631c3ba] TT@199.990000 Buy 10/0/10 Pending", order.String())
 }
 
 func TestRemaining(t *testing.T) {

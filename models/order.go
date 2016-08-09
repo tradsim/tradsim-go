@@ -41,22 +41,22 @@ func (o *Order) Trade(quantity uint) {
 }
 
 func (o *Order) String() string {
-	return fmt.Sprintf("[%s] %s@%f %s %d %s", o.ID, o.Symbol, o.Price, o.Direction.String(), o.Quantity, o.Status.String())
+	return fmt.Sprintf("[%s] %s@%f %s %d/%d/%d %s", o.ID, o.Symbol, o.Price, o.Direction.String(), o.Quantity, o.Traded, o.Remaining(), o.Status.String())
 }
 
 // SetStatus based on the quantities
 func (o *Order) SetStatus() {
-	if o.Traded == 0 {
+	if o.Traded == uint(0) {
 		o.Status = Pending
-		o.logger.Debugf("SetStatus: [%s] Traded 0, set to Pending", o.ID)
+		//o.logger.Debugf("SetStatus: [%s] Traded 0, set to Pending", o.ID.String())
 	} else if o.Traded < o.Quantity {
 		o.Status = PartiallyFilled
-		o.logger.Debugf("SetStatus: [%s] Traded less than Quantity, set to Partially Filled", o.ID)
+		//o.logger.Debugf("SetStatus: [%s] Traded less than Quantity, set to Partially Filled", o.ID.String())
 	} else if o.Traded == o.Quantity {
 		o.Status = FullyFilled
-		o.logger.Debugf("SetStatus: [%s] Traded equals Quantity, set to Fully Filled", o.ID)
+		//o.logger.Debugf("SetStatus: [%s] Traded equals Quantity, set to Fully Filled", o.ID.String())
 	} else {
 		o.Status = OverFilled
-		o.logger.Debugf("SetStatus: [%s] Traded greater than Quantity, set to Over Filled", o.ID)
+		//o.logger.Debugf("SetStatus: [%s] Traded greater than Quantity, set to Over Filled", o.ID.String())
 	}
 }

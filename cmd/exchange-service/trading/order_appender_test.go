@@ -3,19 +3,10 @@ package trading
 import (
 	"testing"
 
-	"os"
-
-	"github.com/mantzas/adaptlog"
 	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"
 	"github.com/tradsim/tradsim-go/models"
 )
-
-func TestMain(m *testing.M) {
-	adaptlog.ConfigureStdLevelLogger(adaptlog.DebugLevel, nil, "")
-	retCode := m.Run()
-	os.Exit(retCode)
-}
 
 func TestAppendInvalidORder(t *testing.T) {
 
