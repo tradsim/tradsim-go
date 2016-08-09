@@ -1,0 +1,4 @@
+package: github.com/mantzas/incata
+import:
+- package: github.com/DATA-DOG/go-sqlmock
+- package: github.com/satori/go.uuid
