@@ -95,6 +95,6 @@ func (p *RabbitMqEventPublisher) Publish(envelope *OrderEventEnvelope) error {
 		return err
 	}
 
-	p.logger.Info("Envelop published!")
+	//p.logger.Info("Envelop published!")
 	return nil
 }
