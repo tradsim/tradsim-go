@@ -26,18 +26,15 @@ func NewOrderAppender() *OrderAppender {
 func (oa *OrderAppender) Append(book *models.OrderBook, order *models.Order) error {
 
 	if order.Status != models.Pending {
-
 		return errors.New("Order status is not pending")
 	}
 
 	prices, ok := book.Symbols[order.Symbol]
 
 	if !ok {
-		oa.logger.Debugf("Symbol %s not found, adding symbol", order.Symbol)
 		oa.addNewSymbol(book, order)
 		return nil
 	}
-	oa.logger.Debugf("Symbol %s found", order.Symbol)
 
 	found, i := findPrice(prices, order.Price)
 
@@ -87,7 +84,7 @@ func (oa *OrderAppender) addNewSymbol(book *models.OrderBook, order *models.Orde
 	price := models.NewOrderPrice(order.Price)
 	addOrderToPrice(price, order)
 	book.Symbols[order.Symbol] = []*models.OrderPrice{price}
-	oa.logger.Debugf("addNewSymbol: Symbol %s appended", order.Symbol)
+	oa.logger.Debugf("Symbol %s appended", order.Symbol)
 }
 
 func addOrderToPrice(price *models.OrderPrice, order *models.Order) {

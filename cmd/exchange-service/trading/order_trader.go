@@ -33,7 +33,6 @@ func (ot *OrderTrader) Trade(book *models.OrderBook, order *models.Order) {
 		ot.logger.Debugf("Symbol %s not in book", order.Symbol)
 		return
 	}
-	ot.logger.Debugf("Symbol %s found", order.Symbol)
 
 	if order.Direction == models.Buy {
 		ot.tradePricesBuy(prices, order)
@@ -73,7 +72,7 @@ func (ot *OrderTrader) tradePrice(price *models.OrderPrice, order *models.Order)
 			for _, existing := range price.Sell.Orders {
 				ot.trade(existing, order)
 			}
-			price.Sell.Quantity = compactOrdersAndGetQuantity(&price.Sell.Orders)
+			price.Sell.Quantity = ot.compactOrdersAndGetQuantity(&price.Sell.Orders)
 			ot.logger.Debugf("Sell quantity after trade on price %f is %d and order count %d", price.Price, price.Sell.Quantity, len(price.Sell.Orders))
 		} else {
 			ot.logger.Debugf("Sell quantity on price %f is zero", price.Price)
@@ -84,7 +83,7 @@ func (ot *OrderTrader) tradePrice(price *models.OrderPrice, order *models.Order)
 			for _, existing := range price.Buy.Orders {
 				ot.trade(existing, order)
 			}
-			price.Buy.Quantity = compactOrdersAndGetQuantity(&price.Buy.Orders)
+			price.Buy.Quantity = ot.compactOrdersAndGetQuantity(&price.Buy.Orders)
 			ot.logger.Debugf("Buy quantity after trade on price %f is %d and order count %d", price.Price, price.Buy.Quantity, len(price.Buy.Orders))
 		} else {
 			ot.logger.Debugf("Buy quantity on price %f is zero", price.Price)
@@ -100,28 +99,26 @@ func (ot *OrderTrader) trade(existing *models.Order, new *models.Order) {
 
 	traded := uint(0)
 
-	ot.logger.Debugf("Existing %v", *existing)
-	ot.logger.Debugf("New %v", *new)
-
 	if existing.Remaining() >= new.Remaining() {
 		traded = new.Remaining()
 	} else {
 		traded = existing.Remaining()
 	}
 
-	tradeOrderQuantity(existing, traded)
+	ot.tradeOrderQuantity(existing, traded)
 	ot.publishTradedEvent(existing.ID, existing.Price, traded)
-	tradeOrderQuantity(new, traded)
+	ot.tradeOrderQuantity(new, traded)
 	ot.publishTradedEvent(new.ID, existing.Price, traded)
 }
 
 // Trade1 the quantity against the order
-func tradeOrderQuantity(o *models.Order, quantity uint) {
+func (ot *OrderTrader) tradeOrderQuantity(o *models.Order, quantity uint) {
 	o.Traded += quantity
-	setOrderStatus(o)
+	ot.setOrderStatus(o)
+	ot.logger.Debugf("Trading %d leaving %s", quantity, o)
 }
 
-func setOrderStatus(o *models.Order) {
+func (ot *OrderTrader) setOrderStatus(o *models.Order) {
 	if o.Traded == uint(0) {
 		o.Status = models.Pending
 	} else if o.Traded < o.Quantity {
@@ -148,7 +145,7 @@ func (ot *OrderTrader) publishTradedEvent(ID uuid.UUID, price float64, traded ui
 	}
 }
 
-func compactOrdersAndGetQuantity(orders *[]*models.Order) uint {
+func (ot *OrderTrader) compactOrdersAndGetQuantity(orders *[]*models.Order) uint {
 	quantity := uint(0)
 	var temp = make([]*models.Order, 0)
 	for _, order := range *orders {
