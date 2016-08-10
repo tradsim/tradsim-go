@@ -3,12 +3,14 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/mantzas/adaptlog"
 	uuid "github.com/satori/go.uuid"
 	"github.com/tradsim/tradsim-go/cmd/exchange-service/trading"
 	"github.com/tradsim/tradsim-go/models"
+	"github.com/tradsim/tradsim-go/events"
 )
 
 // OrderCreate model
@@ -22,15 +24,16 @@ type OrderCreate struct {
 
 // OrderHandler handles orders
 type OrderHandler struct {
-	book     *models.OrderBook
-	appender trading.Appender
-	trader   trading.Trader
-	logger   adaptlog.LevelLogger
+	book      *models.OrderBook
+	appender  trading.Appender
+	trader    trading.Trader
+	publisher events.EventPublisher
+	logger    adaptlog.LevelLogger
 }
 
 // NewOrderHandler creates a new order handler
-func NewOrderHandler(book *models.OrderBook, appender trading.Appender, trader trading.Trader) *OrderHandler {
-	return &OrderHandler{book, appender, trader, adaptlog.NewStdLevelLogger("OrderHandler")}
+func NewOrderHandler(book *models.OrderBook, appender trading.Appender, trader trading.Trader, publisher events.EventPublisher) *OrderHandler {
+	return &OrderHandler{book, appender, trader, publisher, adaptlog.NewStdLevelLogger("OrderHandler")}
 }
 
 // OrderCreateHandle is the handler for the orders
@@ -61,6 +64,15 @@ func (oh *OrderHandler) OrderCreateHandle(w http.ResponseWriter, r *http.Request
 	}
 
 	order := models.NewOrder(orderID, orderCreate.Symbol, orderCreate.Price, orderCreate.Quantity, direction)
+
+	createdEvent := events.NewOrderCreated(order.ID.String(), time.Now().UTC(), order.Symbol, order.Price, order.Quantity, order.Direction, 1)
+	envelope, err := events.NewOrderEventEnvelope(createdEvent, createdEvent.EventType)
+	if err != nil {
+		oh.logger.Errorf("Failed to create order created event envelope! %s", err)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+	oh.publisher.Publish(envelope)
 
 	oh.trader.Trade(oh.book, order)
 

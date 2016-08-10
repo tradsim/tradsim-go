@@ -73,7 +73,7 @@ func (ot *OrderTrader) tradePrice(price *models.OrderPrice, order *models.Order)
 			for _, existing := range price.Sell.Orders {
 				ot.trade(existing, order)
 			}
-			price.Sell.Update()
+			price.Sell.Quantity = compactOrdersAndGetQuantity(&price.Sell.Orders)
 			ot.logger.Debugf("Sell quantity after trade on price %f is %d and order count %d", price.Price, price.Sell.Quantity, len(price.Sell.Orders))
 		} else {
 			ot.logger.Debugf("Sell quantity on price %f is zero", price.Price)
@@ -84,7 +84,7 @@ func (ot *OrderTrader) tradePrice(price *models.OrderPrice, order *models.Order)
 			for _, existing := range price.Buy.Orders {
 				ot.trade(existing, order)
 			}
-			price.Buy.Update()
+			price.Buy.Quantity = compactOrdersAndGetQuantity(&price.Buy.Orders)
 			ot.logger.Debugf("Buy quantity after trade on price %f is %d and order count %d", price.Price, price.Buy.Quantity, len(price.Buy.Orders))
 		} else {
 			ot.logger.Debugf("Buy quantity on price %f is zero", price.Price)
@@ -128,4 +128,17 @@ func (ot *OrderTrader) publishTradedEvent(ID uuid.UUID, price float64, traded ui
 	if err != nil {
 		ot.logger.Errorf("Failed to publish traded event: %s", ev.String())
 	}
+}
+
+func compactOrdersAndGetQuantity(orders *[]*models.Order) uint {
+	quantity := uint(0)
+	var temp = make([]*models.Order, 0)
+	for _, order := range *orders {
+		if order.Status != models.FullyFilled && order.Status != models.OverFilled {
+			quantity += order.Remaining()
+			temp = append(temp, order)	
+		}		
+	}
+	*orders = temp
+	return quantity
 }

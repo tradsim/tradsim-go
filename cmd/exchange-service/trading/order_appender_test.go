@@ -62,7 +62,7 @@ func TestAppendFoundOrder(t *testing.T) {
 	require.True(ok)
 	require.Len(prices, 1)
 	require.Equal(uint(22), prices[0].Sell.Quantity)
-	require.Len(prices[0].Sell.Orders, 2)
+	require.Len(prices[0].Sell.Orders, 1)
 }
 
 func TestAppendAtTheEnd(t *testing.T) {
