@@ -48,15 +48,15 @@ func (o *Order) String() string {
 func (o *Order) SetStatus() {
 	if o.Traded == uint(0) {
 		o.Status = Pending
-		//o.logger.Debugf("SetStatus: [%s] Traded 0, set to Pending", o.ID.String())
+		o.logger.Debugf("SetStatus: [%s] Traded 0, set to Pending", o.ID.String())
 	} else if o.Traded < o.Quantity {
 		o.Status = PartiallyFilled
-		//o.logger.Debugf("SetStatus: [%s] Traded less than Quantity, set to Partially Filled", o.ID.String())
+		o.logger.Debugf("SetStatus: [%s] Traded less than Quantity, set to Partially Filled", o.ID.String())
 	} else if o.Traded == o.Quantity {
 		o.Status = FullyFilled
-		//o.logger.Debugf("SetStatus: [%s] Traded equals Quantity, set to Fully Filled", o.ID.String())
+		o.logger.Debugf("SetStatus: [%s] Traded equals Quantity, set to Fully Filled", o.ID.String())
 	} else {
 		o.Status = OverFilled
-		//o.logger.Debugf("SetStatus: [%s] Traded greater than Quantity, set to Over Filled", o.ID.String())
+		o.logger.Debugf("SetStatus: [%s] Traded greater than Quantity, set to Over Filled", o.ID.String())
 	}
 }
