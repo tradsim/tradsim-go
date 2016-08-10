@@ -93,6 +93,11 @@ func (ot *OrderTrader) tradePrice(price *models.OrderPrice, order *models.Order)
 }
 
 func (ot *OrderTrader) trade(existing *models.Order, new *models.Order) {
+
+	if existing.Remaining() == 0 {
+		return
+	}
+
 	traded := uint(0)
 
 	ot.logger.Debugf("Existing %v", *existing)
