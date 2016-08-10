@@ -11,12 +11,3 @@ type OrderPrice struct {
 func NewOrderPrice(price float64) *OrderPrice {
 	return &OrderPrice{price, *NewOrderQuantity(), *NewOrderQuantity()}
 }
-
-// AddOrder adds a order to the price
-func (op *OrderPrice) AddOrder(order *Order) {
-	if order.Direction == Buy {
-		op.Buy.Add(order)
-	} else {
-		op.Sell.Add(order)
-	}
-}
