@@ -9,8 +9,8 @@ import (
 	"github.com/mantzas/adaptlog"
 	uuid "github.com/satori/go.uuid"
 	"github.com/tradsim/tradsim-go/cmd/exchange-service/trading"
-	"github.com/tradsim/tradsim-go/models"
 	"github.com/tradsim/tradsim-go/events"
+	"github.com/tradsim/tradsim-go/models"
 )
 
 // OrderCreate model

@@ -66,11 +66,11 @@ func TestTradeBuyLeavingFullyFilled(t *testing.T) {
 	require.Equal(models.FullyFilled, orderBuy.Status)
 	require.Equal(uint(0), orderBuy.Remaining())
 	require.Equal(uint(0), prices[0].Sell.Quantity, "Sell %f quantity %d", prices[0].Price, prices[0].Sell.Quantity)
-	require.Len(prices[0].Sell.Orders,0)
+	require.Len(prices[0].Sell.Orders, 0)
 	require.Equal(uint(0), prices[1].Sell.Quantity, "Sell %f quantity %d", prices[1].Price, prices[1].Sell.Quantity)
-	require.Len(prices[1].Sell.Orders,0)
+	require.Len(prices[1].Sell.Orders, 0)
 	require.Equal(uint(10), prices[2].Sell.Quantity, "Sell %f quantity %d", prices[2].Price, prices[2].Sell.Quantity)
-	require.Len(prices[2].Sell.Orders,1)
+	require.Len(prices[2].Sell.Orders, 1)
 
 	require.Len(publisher.envelopes, 4)
 }
@@ -102,11 +102,11 @@ func TestTradeSellLeavingFullyFilled(t *testing.T) {
 	require.Equal(models.FullyFilled, orderSell.Status)
 	require.Equal(uint(0), orderSell.Remaining())
 	require.Equal(uint(10), prices[0].Buy.Quantity, "Sell %f quantity %d", prices[0].Price, prices[0].Buy.Quantity)
-	require.Len(prices[0].Buy.Orders,1)
+	require.Len(prices[0].Buy.Orders, 1)
 	require.Equal(uint(0), prices[1].Buy.Quantity, "Sell %f quantity %d", prices[1].Price, prices[1].Buy.Quantity)
-	require.Len(prices[1].Buy.Orders,0)
+	require.Len(prices[1].Buy.Orders, 0)
 	require.Equal(uint(0), prices[2].Buy.Quantity, "Sell %f quantity %d", prices[2].Price, prices[2].Buy.Quantity)
-	require.Len(prices[2].Buy.Orders,0)
+	require.Len(prices[2].Buy.Orders, 0)
 	require.Len(publisher.envelopes, 4)
 }
 
