@@ -2,6 +2,7 @@ package trading
 
 import (
 	"errors"
+	"sync"
 
 	"github.com/mantzas/adaptlog"
 	"github.com/tradsim/tradsim-go/models"
@@ -14,12 +15,13 @@ type Appender interface {
 
 // OrderAppender adds order to the book
 type OrderAppender struct {
+	mu     sync.Mutex
 	logger adaptlog.LevelLogger
 }
 
 // NewOrderAppender creates a new order appender
 func NewOrderAppender() *OrderAppender {
-	return &OrderAppender{adaptlog.NewStdLevelLogger("OrderAppender")}
+	return &OrderAppender{sync.Mutex{}, adaptlog.NewStdLevelLogger("OrderAppender")}
 }
 
 // Append the order to the book
@@ -28,6 +30,9 @@ func (oa *OrderAppender) Append(book *models.OrderBook, order *models.Order) err
 	if order.Status != models.Pending {
 		return errors.New("Order status is not pending")
 	}
+
+	oa.mu.Lock()
+	defer oa.mu.Unlock()
 
 	prices, ok := book.Symbols[order.Symbol]
 

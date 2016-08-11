@@ -1,6 +1,7 @@
 package trading
 
 import (
+	"sync"
 	"time"
 
 	"github.com/mantzas/adaptlog"
@@ -18,15 +19,19 @@ type Trader interface {
 type OrderTrader struct {
 	logger    adaptlog.LevelLogger
 	publisher events.EventPublisher
+	mu        sync.Mutex
 }
 
 // NewOrderTrader creates a new order trader
 func NewOrderTrader(publisher events.EventPublisher) *OrderTrader {
-	return &OrderTrader{adaptlog.NewStdLevelLogger("OrderTrader"), publisher}
+	return &OrderTrader{adaptlog.NewStdLevelLogger("OrderTrader"), publisher, sync.Mutex{}}
 }
 
 // Trade processes a order against the book
 func (ot *OrderTrader) Trade(book *models.OrderBook, order *models.Order) {
+
+	ot.mu.Lock()
+	defer ot.mu.Unlock()
 
 	prices, ok := book.Symbols[order.Symbol]
 	if !ok {
