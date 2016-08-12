@@ -41,13 +41,13 @@ func main() {
 	appender := trading.NewOrderAppender()
 	trader := trading.NewOrderTrader(publisher)
 	orderHandler := handlers.NewOrderHandler(orderBook, appender, trader, publisher)
-	// orderBookHandler := handlers.NewOrderBookHandler(orderBook)
+	orderBookHandler := handlers.NewOrderBookHandler(orderBook)
 
 	router := httprouter.New()
 
 	router.POST("/orders", common_http.POSTJSONValidationMiddleware(orderHandler.OrderCreateHandle))
-	// router.GET("/orderbook", common_http.GETValidationMiddleware(orderBookHandler.GetSymbolsHandler))
-	// router.GET("/orderbook/:symbol", common_http.GETValidationMiddleware(orderBookHandler.GetSymbolHandler))
+	router.GET("/orderbook", common_http.GETValidationMiddleware(orderBookHandler.GetSymbolsHandler))
+	router.GET("/orderbook/:symbol", common_http.GETValidationMiddleware(orderBookHandler.GetSymbolHandler))
 
 	adaptlog.Level.Info("Starting exchange  service.")
 
