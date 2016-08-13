@@ -2,13 +2,17 @@ package events
 
 import "time"
 
-// OrderCanceled defines a order canceled event
-type OrderCanceled struct {
+// OrderCancelled defines a order cancelled event
+type OrderCancelled struct {
 	OrderEvent
 }
 
-// NewOrderCanceled creates a new order amed pending event
-func NewOrderCanceled(orderID string, occured time.Time, version uint) *OrderCanceled {
+func (e *OrderCancelled) String() string {
+	return e.OrderEvent.String()
+}
 
-	return &OrderCanceled{*NewOrderEvent(OrderCanceledType, orderID, occured, version)}
+// NewOrderCancelled creates a new order amed pending event
+func NewOrderCancelled(orderID string, occured time.Time, version uint) *OrderCancelled {
+
+	return &OrderCancelled{*NewOrderEvent(OrderCancelledType, orderID, occured, version)}
 }

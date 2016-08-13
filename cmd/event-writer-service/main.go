@@ -91,10 +91,10 @@ func processEnvelope(envelope *events.OrderEventEnvelope) error {
 		event := untypedEvent.(events.OrderAmended)
 		sourceID, created, version, err = getOrderEventData(event.OrderEvent)
 		adaptlog.Level.Infof("Order amended received: %s", event.String())
-	case events.OrderCanceledType:
-		event := untypedEvent.(events.OrderCanceled)
+	case events.OrderCancelledType:
+		event := untypedEvent.(events.OrderCancelled)
 		sourceID, created, version, err = getOrderEventData(event.OrderEvent)
-		adaptlog.Level.Infof("Order canceled received: %s", event.String())
+		adaptlog.Level.Infof("Order cancelled received: %s", event.String())
 	case events.OrderTradedType:
 		event := untypedEvent.(events.OrderTraded)
 		sourceID, created, version, err = getOrderEventData(event.OrderEvent)

@@ -9,9 +9,7 @@ import (
 func TestGetEventTypeError(t *testing.T) {
 
 	require := require.New(t)
-
 	_, err := GetEventType("test")
-
 	require.NotNil(err)
 }
 
@@ -20,7 +18,7 @@ var orderEnvelopeGetErrorTests = []struct {
 }{
 	{OrderCreatedType},
 	{OrderAmendedType},
-	{OrderCanceledType},
+	{OrderCancelledType},
 	{OrderTradedType},
 }
 
@@ -47,7 +45,7 @@ var orderEnvelopeTests = []struct {
 }{
 	{input{OrderCreated{}, OrderCreatedType}, OrderCreatedType},
 	{input{OrderAmended{}, OrderAmendedType}, OrderAmendedType},
-	{input{OrderCanceled{}, OrderCanceledType}, OrderCanceledType},
+	{input{OrderCancelled{}, OrderCancelledType}, OrderCancelledType},
 	{input{OrderTraded{}, OrderTradedType}, OrderTradedType},
 }
 

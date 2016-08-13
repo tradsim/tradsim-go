@@ -49,7 +49,7 @@ func (oc *OrderCanceller) Cancel(book *models.OrderBook, orderID uuid.UUID) bool
 
 func (oc *OrderCanceller) publishCancelledEvent(ID uuid.UUID) {
 
-	ev := events.NewOrderCanceled(ID.String(), time.Now().UTC(), uint(1))
+	ev := events.NewOrderCancelled(ID.String(), time.Now().UTC(), uint(1))
 	env, err := events.NewOrderEventEnvelope(ev, ev.EventType)
 
 	if err != nil {
