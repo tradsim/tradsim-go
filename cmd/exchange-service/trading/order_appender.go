@@ -38,6 +38,7 @@ func (oa *OrderAppender) Append(book *models.OrderBook, order *models.Order) err
 
 	if !ok {
 		oa.addNewSymbol(book, order)
+		book.Orders[order.ID] = order
 		return nil
 	}
 
@@ -64,6 +65,7 @@ func (oa *OrderAppender) Append(book *models.OrderBook, order *models.Order) err
 		}
 		book.Symbols[order.Symbol] = prices
 	}
+	book.Orders[order.ID] = order
 
 	return nil
 }

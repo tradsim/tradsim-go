@@ -8,7 +8,7 @@ import (
 	"github.com/tradsim/tradsim-go/models"
 )
 
-func TestAppendInvalidORder(t *testing.T) {
+func TestAppendInvalidOrder(t *testing.T) {
 
 	require := require.New(t)
 
@@ -39,6 +39,8 @@ func TestAppendNewSymbol(t *testing.T) {
 	require.Len(book.Symbols, 1)
 	_, ok := book.Symbols["TT"]
 	require.True(ok)
+	_, ok = book.Orders[order.ID]
+	require.True(ok)
 }
 
 func TestAppendFoundOrder(t *testing.T) {
@@ -63,6 +65,7 @@ func TestAppendFoundOrder(t *testing.T) {
 	require.Len(prices, 1)
 	require.Equal(uint(22), prices[0].Sell.Quantity)
 	require.Len(prices[0].Sell.Orders, 1)
+	require.Len(book.Orders, 2)
 }
 
 func TestAppendAtTheEnd(t *testing.T) {
@@ -98,6 +101,8 @@ func TestAppendAtTheEnd(t *testing.T) {
 	require.Equal(199.99, prices[1].Price)
 	require.Len(prices[1].Sell.Orders, 1)
 	require.Equal(uint(12), prices[1].Sell.Quantity)
+
+	require.Len(book.Orders, 2)
 }
 
 func TestAppendAtTheBeginning(t *testing.T) {
@@ -123,6 +128,7 @@ func TestAppendAtTheBeginning(t *testing.T) {
 	require.Len(prices, 2)
 	require.Equal(199.98, prices[0].Price)
 	require.Equal(199.99, prices[1].Price)
+	require.Len(book.Orders, 2)
 }
 
 func TestAppendAtTheMiddle(t *testing.T) {
@@ -153,6 +159,7 @@ func TestAppendAtTheMiddle(t *testing.T) {
 	require.Equal(199.97, prices[0].Price, "1")
 	require.Equal(199.98, prices[1].Price, "2")
 	require.Equal(199.99, prices[2].Price, "3")
+	require.Len(book.Orders, 3)
 }
 
 // append

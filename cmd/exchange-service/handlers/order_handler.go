@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
@@ -27,13 +28,14 @@ type OrderHandler struct {
 	book      *models.OrderBook
 	appender  trading.Appender
 	trader    trading.Trader
+	canceller trading.Canceller
 	publisher events.EventPublisher
 	logger    adaptlog.LevelLogger
 }
 
 // NewOrderHandler creates a new order handler
-func NewOrderHandler(book *models.OrderBook, appender trading.Appender, trader trading.Trader, publisher events.EventPublisher) *OrderHandler {
-	return &OrderHandler{book, appender, trader, publisher, adaptlog.NewStdLevelLogger("OrderHandler")}
+func NewOrderHandler(book *models.OrderBook, appender trading.Appender, trader trading.Trader, canceller trading.Canceller, publisher events.EventPublisher) *OrderHandler {
+	return &OrderHandler{book, appender, trader, canceller, publisher, adaptlog.NewStdLevelLogger("OrderHandler")}
 }
 
 // OrderCreateHandle is the handler for the orders
@@ -86,4 +88,27 @@ func (oh *OrderHandler) OrderCreateHandle(w http.ResponseWriter, r *http.Request
 	}
 
 	w.WriteHeader(http.StatusAccepted)
+}
+
+// OrderCancelHandle is the handler for cancelling a order
+func (oh *OrderHandler) OrderCancelHandle(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+
+	orderID := uuid.FromStringOrNil(strings.ToUpper(p.ByName("orderid")))
+
+	if orderID == uuid.Nil {
+		oh.logger.Error("Failed to get orderID!")
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	cancelled := oh.canceller.Cancel(oh.book, orderID)
+
+	if cancelled {
+		w.WriteHeader(http.StatusAccepted)
+		oh.logger.Debugf("OrderCancelHandle: Order %s cancelled", orderID.String())
+	} else {
+		http.NotFound(w, r)
+		oh.logger.Debugf("OrderCancelHandle: Order %s not found", orderID.String())
+	}
+
 }

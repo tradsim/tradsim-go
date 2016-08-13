@@ -14,6 +14,7 @@ var orderStatusTradeableTests = []struct {
 	{PartiallyFilled, true},
 	{FullyFilled, false},
 	{OverFilled, false},
+	{Cancelled, false},
 }
 
 func TestOrderStatusIsTradeable(t *testing.T) {
@@ -28,10 +29,11 @@ var orderStatusTests = []struct {
 	in  OrderStatus
 	out string
 }{
-	{Pending, "Pending"},
-	{PartiallyFilled, "PartiallyFilled"},
-	{FullyFilled, "FullyFilled"},
-	{OverFilled, "OverFilled"},
+	{Pending, PendingText},
+	{PartiallyFilled, PartiallyFilledText},
+	{FullyFilled, FullyFilledText},
+	{OverFilled, OverFilledText},
+	{Cancelled, CancelledText},
 	{9, "Not mapped value 9"},
 }
 
@@ -50,22 +52,26 @@ var orderStatusFromStringTests = []struct {
 		hasError bool
 	}
 }{
-	{"Pending", struct {
+	{PendingText, struct {
 		status   OrderStatus
 		hasError bool
 	}{Pending, false}},
-	{"PartiallyFilled", struct {
+	{PartiallyFilledText, struct {
 		status   OrderStatus
 		hasError bool
 	}{PartiallyFilled, false}},
-	{"FullyFilled", struct {
+	{FullyFilledText, struct {
 		status   OrderStatus
 		hasError bool
 	}{FullyFilled, false}},
-	{"OverFilled", struct {
+	{OverFilledText, struct {
 		status   OrderStatus
 		hasError bool
 	}{OverFilled, false}},
+	{CancelledText, struct {
+		status   OrderStatus
+		hasError bool
+	}{Cancelled, false}},
 	{"9", struct {
 		status   OrderStatus
 		hasError bool

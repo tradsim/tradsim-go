@@ -98,7 +98,7 @@ func (ot *OrderTrader) tradePrice(price *models.OrderPrice, order *models.Order)
 
 func (ot *OrderTrader) trade(existing *models.Order, new *models.Order) {
 
-	if existing.Remaining() == 0 {
+	if !existing.Status.IsTradeable() {
 		return
 	}
 
@@ -154,7 +154,8 @@ func (ot *OrderTrader) compactOrdersAndGetQuantity(orders *[]*models.Order) uint
 	quantity := uint(0)
 	var temp = make([]*models.Order, 0)
 	for _, order := range *orders {
-		if order.Status != models.FullyFilled && order.Status != models.OverFilled {
+		if order.Status != models.FullyFilled && order.Status != models.OverFilled &&
+			order.Status != models.Cancelled {
 			quantity += order.Remaining()
 			temp = append(temp, order)
 		}

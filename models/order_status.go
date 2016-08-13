@@ -11,6 +11,7 @@ const (
 	PartiallyFilled
 	FullyFilled
 	OverFilled
+	Cancelled
 )
 
 // Order status string
@@ -19,6 +20,7 @@ const (
 	PartiallyFilledText = "PartiallyFilled"
 	FullyFilledText     = "FullyFilled"
 	OverFilledText      = "OverFilled"
+	CancelledText       = "Cancelled"
 )
 
 func (o OrderStatus) String() string {
@@ -31,6 +33,8 @@ func (o OrderStatus) String() string {
 		return FullyFilledText
 	case OverFilled:
 		return OverFilledText
+	case Cancelled:
+		return CancelledText
 	default:
 		return fmt.Sprintf("Not mapped value %d", o)
 	}
@@ -57,6 +61,8 @@ func OrderStatusFromString(value string) (OrderStatus, error) {
 		return FullyFilled, nil
 	case OverFilledText:
 		return OverFilled, nil
+	case CancelledText:
+		return Cancelled, nil
 	default:
 		return 9, fmt.Errorf("Not mapped %s", value)
 	}

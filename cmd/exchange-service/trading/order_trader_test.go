@@ -7,7 +7,7 @@ import (
 	"github.com/mantzas/adaptlog"
 	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"
-	"github.com/tradsim/tradsim-go/events"
+	"github.com/tradsim/tradsim-go/mocks"
 	"github.com/tradsim/tradsim-go/models"
 )
 
@@ -21,7 +21,7 @@ func TestNewOrderTrader(t *testing.T) {
 
 	require := require.New(t)
 
-	trader := NewOrderTrader(&MockPublisher{})
+	trader := NewOrderTrader(&mocks.MockPublisher{})
 
 	require.NotNil(trader)
 }
@@ -33,7 +33,7 @@ func TestTradeNoSymbol(t *testing.T) {
 	book := models.NewOrderBook()
 	order := models.NewOrder(uuid.NewV4(), "TT", 199.99, 10, models.Sell)
 
-	trader := NewOrderTrader(&MockPublisher{})
+	trader := NewOrderTrader(&mocks.MockPublisher{})
 	trader.Trade(book, order)
 
 	require.Equal(uint(0), order.Traded)
@@ -55,7 +55,7 @@ func TestTradeBuyLeavingFullyFilled(t *testing.T) {
 
 	orderBuy := models.NewOrder(uuid.NewV4(), "TT", 199.98, 20, models.Buy)
 
-	publisher := &MockPublisher{}
+	publisher := &mocks.MockPublisher{}
 	trader := NewOrderTrader(publisher)
 	trader.Trade(book, orderBuy)
 
@@ -72,7 +72,7 @@ func TestTradeBuyLeavingFullyFilled(t *testing.T) {
 	require.Equal(uint(10), prices[2].Sell.Quantity, "Sell %f quantity %d", prices[2].Price, prices[2].Sell.Quantity)
 	require.Len(prices[2].Sell.Orders, 1)
 
-	require.Len(publisher.envelopes, 4)
+	require.Len(publisher.Envelopes, 4)
 }
 
 func TestTradeSellLeavingFullyFilled(t *testing.T) {
@@ -91,7 +91,7 @@ func TestTradeSellLeavingFullyFilled(t *testing.T) {
 
 	orderSell := models.NewOrder(uuid.NewV4(), "TT", 199.98, 20, models.Sell)
 
-	publisher := &MockPublisher{}
+	publisher := &mocks.MockPublisher{}
 	trader := NewOrderTrader(publisher)
 	trader.Trade(book, orderSell)
 
@@ -107,21 +107,5 @@ func TestTradeSellLeavingFullyFilled(t *testing.T) {
 	require.Len(prices[1].Buy.Orders, 0)
 	require.Equal(uint(0), prices[2].Buy.Quantity, "Sell %f quantity %d", prices[2].Price, prices[2].Buy.Quantity)
 	require.Len(prices[2].Buy.Orders, 0)
-	require.Len(publisher.envelopes, 4)
-}
-
-type MockPublisher struct {
-	envelopes []*events.OrderEventEnvelope
-}
-
-func (mp *MockPublisher) Open() error {
-	return nil
-}
-
-func (mp *MockPublisher) Close() {
-}
-
-func (mp *MockPublisher) Publish(envelope *events.OrderEventEnvelope) error {
-	mp.envelopes = append(mp.envelopes, envelope)
-	return nil
+	require.Len(publisher.Envelopes, 4)
 }
