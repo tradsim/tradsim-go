@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tradsim/tradsim-go/cmd/exchange-service/trading"
 	"github.com/tradsim/tradsim-go/models"
+	common_http "github.com/tradsim/tradsim-go/net/http"
 )
 
 func TestGetSymbolHandler(t *testing.T) {
@@ -34,7 +35,7 @@ func TestGetSymbolHandler(t *testing.T) {
 	response := httptest.NewRecorder()
 
 	router := httprouter.New()
-	router.Handle(http.MethodGet, "/orderbook/:symbol", handler.GetSymbolHandler)
+	router.Handle(http.MethodGet, "/orderbook/:symbol", common_http.DefaultGETValidationMiddleware(handler.GetSymbolHandler))
 
 	router.ServeHTTP(response, request)
 
@@ -63,6 +64,25 @@ func TestGetSymbolHandler(t *testing.T) {
 	require.Equal(uint(1), symbol.Prices[1].SellDepth)
 }
 
+func TestGetSymbolHandlerNotFound(t *testing.T) {
+
+	require := require.New(t)
+	book := models.NewOrderBook()
+
+	handler := NewOrderBookHandler(book)
+
+	request, _ := http.NewRequest(http.MethodGet, "/orderbook/TT", nil)
+
+	response := httptest.NewRecorder()
+
+	router := httprouter.New()
+	router.Handle(http.MethodGet, "/orderbook/:symbol", common_http.DefaultGETValidationMiddleware(handler.GetSymbolHandler))
+
+	router.ServeHTTP(response, request)
+
+	require.Equal(response.Code, http.StatusNotFound)
+}
+
 func TestGetSymbolsHandler(t *testing.T) {
 
 	require := require.New(t)
@@ -86,7 +106,7 @@ func TestGetSymbolsHandler(t *testing.T) {
 	response := httptest.NewRecorder()
 
 	router := httprouter.New()
-	router.Handle(http.MethodGet, "/orderbook", handler.GetSymbolsHandler)
+	router.Handle(http.MethodGet, "/orderbook", common_http.DefaultGETValidationMiddleware(handler.GetSymbolsHandler))
 
 	router.ServeHTTP(response, request)
 
@@ -104,4 +124,23 @@ func TestGetSymbolsHandler(t *testing.T) {
 
 	require.Len(symbols[0].Prices, 2)
 	require.Len(symbols[1].Prices, 2)
+}
+
+func TestGetSymbolsHandlerNotFound(t *testing.T) {
+
+	require := require.New(t)
+	book := models.NewOrderBook()
+
+	handler := NewOrderBookHandler(book)
+
+	request, _ := http.NewRequest(http.MethodGet, "/orderbook", nil)
+
+	response := httptest.NewRecorder()
+
+	router := httprouter.New()
+	router.Handle(http.MethodGet, "/orderbook", common_http.DefaultGETValidationMiddleware(handler.GetSymbolsHandler))
+
+	router.ServeHTTP(response, request)
+
+	require.Equal(response.Code, http.StatusNotFound)
 }
