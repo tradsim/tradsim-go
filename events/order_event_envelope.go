@@ -10,10 +10,11 @@ type OrderEventType string
 
 // Order Event type constants
 const (
-	OrderCreatedType   OrderEventType = "OrderCreated"
-	OrderAmendedType   OrderEventType = "OrderAmended"
-	OrderCancelledType OrderEventType = "OrderCancelled"
-	OrderTradedType    OrderEventType = "OrderTraded"
+	OrderCreatedType     OrderEventType = "OrderCreated"
+	OrderAmendedType     OrderEventType = "OrderAmended"
+	OrderCancelledType   OrderEventType = "OrderCancelled"
+	OrderTradedType      OrderEventType = "OrderTraded"
+	OrderEventStoredType OrderEventType = "OrderEventStored"
 )
 
 // GetEventType returns the event type from a event
@@ -27,6 +28,8 @@ func GetEventType(event interface{}) (OrderEventType, error) {
 		return OrderCancelledType, nil
 	case OrderTraded:
 		return OrderTradedType, nil
+	case OrderEventStored:
+		return OrderEventStoredType, nil
 	default:
 		return "", errors.New("invalid event provided")
 	}
@@ -62,6 +65,8 @@ func (e *OrderEventEnvelope) GetOrderEvent() (interface{}, error) {
 		return e.getCancelledEvent()
 	case OrderTradedType:
 		return e.getTradedEvent()
+	case OrderEventStoredType:
+		return e.getOrderEventStored()
 	default:
 		return nil, errors.New("invalid order event type provided")
 	}
@@ -96,6 +101,15 @@ func (e *OrderEventEnvelope) getCancelledEvent() (interface{}, error) {
 
 func (e *OrderEventEnvelope) getTradedEvent() (interface{}, error) {
 	var event OrderTraded
+	err := e.getEvent(e.Payload, &event)
+	if err != nil {
+		return nil, err
+	}
+	return event, nil
+}
+
+func (e *OrderEventEnvelope) getOrderEventStored() (interface{}, error) {
+	var event OrderEventStored
 	err := e.getEvent(e.Payload, &event)
 	if err != nil {
 		return nil, err
