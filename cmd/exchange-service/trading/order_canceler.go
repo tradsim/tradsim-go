@@ -38,6 +38,10 @@ func (oc *OrderCanceller) Cancel(book *models.OrderBook, orderID uuid.UUID) bool
 		return false
 	}
 
+	if !order.Status.IsTradeable() {
+		return false
+	}
+
 	order.Status = models.Cancelled
 	oc.publishCancelledEvent(orderID)
 	return true
