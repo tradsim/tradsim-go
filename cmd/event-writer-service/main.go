@@ -21,8 +21,9 @@ import (
 func main() {
 	//TODO: Configuration handling
 	var url = "amqp://guest:guest@localhost:5672/tradsim"
-	var queue = "order_events"
-	var exchange = "order_events"
+	var subQueue = "order_events"
+	var subExchange = "order_events"
+	var pubExchange = "order_event_stored"
 	var connectionString = "postgres://postgres:1234@localhost/orderevents?sslmode=disable"
 	var dbName = "orderevents"
 
@@ -30,7 +31,7 @@ func main() {
 
 	setupIncata(connectionString, dbName)
 
-	processor := events.NewOrderEventProcessor(url, exchange, queue, processEnvelope)
+	processor := events.NewOrderEventProcessor(url, subExchange, subQueue, pubExchange, processEnvelope)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
@@ -71,11 +72,11 @@ func setupIncata(connection string, dbName string) {
 	incata.SetupAppender(wr)
 }
 
-func processEnvelope(envelope *events.OrderEventEnvelope) error {
+func processEnvelope(envelope *events.OrderEventEnvelope) (string, error) {
 
 	untypedEvent, err := envelope.GetOrderEvent()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	var sourceID uuid.UUID
@@ -100,11 +101,11 @@ func processEnvelope(envelope *events.OrderEventEnvelope) error {
 		sourceID, created, version, err = getOrderEventData(event.OrderEvent)
 		adaptlog.Level.Infof("Order traded received: %s", event.String())
 	default:
-		return errors.New("invalid order event type received")
+		return "", errors.New("invalid order event type received")
 	}
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	dbEvent := incatamodel.NewEvent(sourceID, created, envelope.Payload, string(envelope.EventType), int(version))
@@ -113,10 +114,10 @@ func processEnvelope(envelope *events.OrderEventEnvelope) error {
 
 	if err != nil {
 		adaptlog.Level.Errorf("Faile to create a appender! %s", err)
-		return err
+		return "", err
 	}
 
-	return appender.Append(*dbEvent)
+	return sourceID.String(), appender.Append(*dbEvent)
 }
 
 func getOrderEventData(orderEvent events.OrderEvent) (uuid.UUID, time.Time, uint, error) {

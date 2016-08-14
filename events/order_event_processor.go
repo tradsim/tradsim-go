@@ -2,6 +2,7 @@ package events
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/mantzas/adaptlog"
 	"github.com/streadway/amqp"
@@ -16,18 +17,20 @@ type EventProcessor interface {
 
 // OrderEventProcessor defines the order event struct
 type OrderEventProcessor struct {
-	url        string
-	exchange   string
-	queue      string
-	connection *amqp.Connection
-	channel    *amqp.Channel
-	logger     adaptlog.LevelLogger
-	processor  func(envelope *OrderEventEnvelope) error
+	url       string
+	subExc    string
+	subQ      string
+	pubExc    string
+	conn      *amqp.Connection
+	subCh     *amqp.Channel
+	pubCh     *amqp.Channel
+	logger    adaptlog.LevelLogger
+	processor func(envelope *OrderEventEnvelope) (string, error)
 }
 
 // NewOrderEventProcessor creates a new order event processor
-func NewOrderEventProcessor(url string, exchange string, queue string, processor func(envelope *OrderEventEnvelope) error) *OrderEventProcessor {
-	return &OrderEventProcessor{url, exchange, queue, nil, nil, adaptlog.NewStdLevelLogger("OrderEventProcessor"), processor}
+func NewOrderEventProcessor(url string, subExchange string, subQueue string, pubExchange string, processor func(envelope *OrderEventEnvelope) (string, error)) *OrderEventProcessor {
+	return &OrderEventProcessor{url, subExchange, subQueue, pubExchange, nil, nil, nil, adaptlog.NewStdLevelLogger("OrderEventProcessor"), processor}
 }
 
 // Open handles the opening of connection, channel, echange and queue
@@ -38,13 +41,19 @@ func (p *OrderEventProcessor) Open() error {
 		return err
 	}
 
-	p.connection = conn
+	p.conn = conn
 
-	ch, err := p.setupExchangeAndQueue(conn, p.exchange, p.queue)
+	subCh, err := p.setupSubscribeExchangeAndQueue(conn, p.subExc, p.subQ)
 	if err != nil {
 		return err
 	}
-	p.channel = ch
+	p.subCh = subCh
+
+	pubCh, err := p.setupPublishChannel(p.pubExc)
+	if err != nil {
+		return err
+	}
+	p.pubCh = pubCh
 
 	return nil
 }
@@ -52,19 +61,19 @@ func (p *OrderEventProcessor) Open() error {
 // Close handles the closing of connection and channel
 func (p *OrderEventProcessor) Close() {
 
-	if p.connection != nil {
-		p.connection.Close()
+	if p.conn != nil {
+		p.conn.Close()
 	}
 
-	if p.channel != nil {
-		p.channel.Close()
+	if p.subCh != nil {
+		p.subCh.Close()
 	}
 }
 
 // Process starts processing events
 func (p *OrderEventProcessor) Process() error {
 
-	msgs, err := p.getSubscriptionChannel(p.channel, p.queue)
+	msgs, err := p.getSubscriptionChannel(p.subCh, p.subQ)
 
 	if err != nil {
 		return err
@@ -79,11 +88,12 @@ func (p *OrderEventProcessor) Process() error {
 			return err
 		}
 
-		err = p.processor(&envelope)
-		if err == nil {
+		orderID, err := p.processor(&envelope)
+		if err != nil {
 			p.logger.Errorf("Failed to process envelope %s", err)
 		} else {
 			d.Ack(false)
+			p.publishOrderEventStored(orderID)
 		}
 	}
 
@@ -101,7 +111,7 @@ func (p *OrderEventProcessor) setupConnection(url string) (*amqp.Connection, err
 	return conn, nil
 }
 
-func (p *OrderEventProcessor) setupExchangeAndQueue(conn *amqp.Connection, exchange string, queue string) (*amqp.Channel, error) {
+func (p *OrderEventProcessor) setupSubscribeExchangeAndQueue(conn *amqp.Connection, exchange string, queue string) (*amqp.Channel, error) {
 
 	ch, err := conn.Channel()
 	if err != nil {
@@ -171,4 +181,54 @@ func (p *OrderEventProcessor) getSubscriptionChannel(ch *amqp.Channel, queue str
 	p.logger.Infof("ampq: subscription on queue %s set", queue)
 
 	return msgs, nil
+}
+
+func (p *OrderEventProcessor) setupPublishChannel(pubExchange string) (*amqp.Channel, error) {
+	ch, err := p.conn.Channel()
+	if err != nil {
+		return nil, err
+	}
+
+	err = ch.ExchangeDeclare(
+		pubExchange, // name
+		"fanout",    // type
+		true,        // durable
+		false,       // auto-deleted
+		false,       // internal
+		false,       // no-wait
+		nil,         // arguments
+	)
+
+	return ch, nil
+}
+
+func (p *OrderEventProcessor) publishOrderEventStored(orderID string) error {
+	createdEvent := NewOrderEventStored(orderID, time.Now().UTC(), 1)
+	envelope, err := NewOrderEventEnvelope(createdEvent, createdEvent.EventType)
+	if err != nil {
+		return err
+	}
+
+	jsonBytes, err := json.Marshal(envelope)
+	if err != nil {
+		return err
+	}
+
+	err = p.pubCh.Publish(
+		p.pubExc, // exchange
+		"",       // routing key
+		false,    // mandatory
+		false,    // immediate
+		amqp.Publishing{
+			ContentType: "application/json",
+			Body:        jsonBytes,
+		})
+
+	if err != nil {
+		p.logger.Errorf("Failed to publish stored event")
+	} else {
+		p.logger.Debugf("Stored event published")
+	}
+
+	return err
 }
