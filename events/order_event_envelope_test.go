@@ -16,7 +16,7 @@ func TestGetEventTypeError(t *testing.T) {
 var orderEnvelopeGetErrorTests = []struct {
 	in OrderEventType
 }{
-	{OrderCreatedType},
+	{OrderAcceptedType},
 	{OrderAmendedType},
 	{OrderCancelledType},
 	{OrderTradedType},
@@ -43,7 +43,7 @@ var orderEnvelopeTests = []struct {
 	in  input
 	out OrderEventType
 }{
-	{input{OrderCreated{}, OrderCreatedType}, OrderCreatedType},
+	{input{OrderAccepted{}, OrderAcceptedType}, OrderAcceptedType},
 	{input{OrderAmended{}, OrderAmendedType}, OrderAmendedType},
 	{input{OrderCancelled{}, OrderCancelledType}, OrderCancelledType},
 	{input{OrderTraded{}, OrderTradedType}, OrderTradedType},

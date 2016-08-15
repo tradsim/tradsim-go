@@ -16,7 +16,7 @@ func (e *OrderTraded) String() string {
 	return fmt.Sprintf("%s %d@%f", e.OrderEvent.String(), e.Quantity, e.Price)
 }
 
-// NewOrderTraded creates a new order created event
+// NewOrderTraded creates a new order traded event
 func NewOrderTraded(orderID string, occured time.Time, price float64, quantity uint, version uint) *OrderTraded {
 
 	return &OrderTraded{*NewOrderEvent(OrderTradedType, orderID, occured, version), price, quantity}

@@ -203,8 +203,8 @@ func (p *OrderEventProcessor) setupPublishChannel(pubExchange string) (*amqp.Cha
 }
 
 func (p *OrderEventProcessor) publishOrderEventStored(orderID string) error {
-	createdEvent := NewOrderEventStored(orderID, time.Now().UTC(), 1)
-	envelope, err := NewOrderEventEnvelope(createdEvent, createdEvent.EventType)
+	event := NewOrderEventStored(orderID, time.Now().UTC(), 1)
+	envelope, err := NewOrderEventEnvelope(event, event.EventType)
 	if err != nil {
 		return err
 	}

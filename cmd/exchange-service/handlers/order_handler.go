@@ -67,10 +67,10 @@ func (oh *OrderHandler) OrderCreateHandle(w http.ResponseWriter, r *http.Request
 
 	order := models.NewOrder(orderID, orderCreate.Symbol, orderCreate.Price, orderCreate.Quantity, direction)
 
-	createdEvent := events.NewOrderCreated(order.ID.String(), time.Now().UTC(), order.Symbol, order.Price, order.Quantity, order.Direction, 1)
-	envelope, err := events.NewOrderEventEnvelope(createdEvent, createdEvent.EventType)
+	acceptedEvent := events.NewOrderAccepted(order.ID.String(), time.Now().UTC(), order.Symbol, order.Price, order.Quantity, order.Direction, 1)
+	envelope, err := events.NewOrderEventEnvelope(acceptedEvent, acceptedEvent.EventType)
 	if err != nil {
-		oh.logger.Errorf("Failed to create order created event envelope! %s", err)
+		oh.logger.Errorf("Failed to create order accepted event envelope! %s", err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}

@@ -80,25 +80,25 @@ func processEnvelope(envelope *events.OrderEventEnvelope) (string, error) {
 	}
 
 	var sourceID uuid.UUID
-	var created time.Time
+	var occured time.Time
 	var version uint
 
 	switch envelope.EventType {
-	case events.OrderCreatedType:
-		event := untypedEvent.(events.OrderCreated)
-		sourceID, created, version, err = getOrderEventData(event.OrderEvent)
-		adaptlog.Level.Infof("Order created received: %s", event.String())
+	case events.OrderAcceptedType:
+		event := untypedEvent.(events.OrderAccepted)
+		sourceID, occured, version, err = getOrderEventData(event.OrderEvent)
+		adaptlog.Level.Infof("Order accepted received: %s", event.String())
 	case events.OrderAmendedType:
 		event := untypedEvent.(events.OrderAmended)
-		sourceID, created, version, err = getOrderEventData(event.OrderEvent)
+		sourceID, occured, version, err = getOrderEventData(event.OrderEvent)
 		adaptlog.Level.Infof("Order amended received: %s", event.String())
 	case events.OrderCancelledType:
 		event := untypedEvent.(events.OrderCancelled)
-		sourceID, created, version, err = getOrderEventData(event.OrderEvent)
+		sourceID, occured, version, err = getOrderEventData(event.OrderEvent)
 		adaptlog.Level.Infof("Order cancelled received: %s", event.String())
 	case events.OrderTradedType:
 		event := untypedEvent.(events.OrderTraded)
-		sourceID, created, version, err = getOrderEventData(event.OrderEvent)
+		sourceID, occured, version, err = getOrderEventData(event.OrderEvent)
 		adaptlog.Level.Infof("Order traded received: %s", event.String())
 	default:
 		return "", errors.New("invalid order event type received")
@@ -108,7 +108,7 @@ func processEnvelope(envelope *events.OrderEventEnvelope) (string, error) {
 		return "", err
 	}
 
-	dbEvent := incatamodel.NewEvent(sourceID, created, envelope.Payload, string(envelope.EventType), int(version))
+	dbEvent := incatamodel.NewEvent(sourceID, occured, envelope.Payload, string(envelope.EventType), int(version))
 
 	appender, err := incata.NewAppender()
 

@@ -10,7 +10,7 @@ type OrderEventType string
 
 // Order Event type constants
 const (
-	OrderCreatedType     OrderEventType = "OrderCreated"
+	OrderAcceptedType    OrderEventType = "OrderAccepted"
 	OrderAmendedType     OrderEventType = "OrderAmended"
 	OrderCancelledType   OrderEventType = "OrderCancelled"
 	OrderTradedType      OrderEventType = "OrderTraded"
@@ -20,8 +20,8 @@ const (
 // GetEventType returns the event type from a event
 func GetEventType(event interface{}) (OrderEventType, error) {
 	switch event.(type) {
-	case OrderCreated:
-		return OrderCreatedType, nil
+	case OrderAccepted:
+		return OrderAcceptedType, nil
 	case OrderAmended:
 		return OrderAmendedType, nil
 	case OrderCancelled:
@@ -57,8 +57,8 @@ func NewOrderEventEnvelope(event interface{}, eventType OrderEventType) (*OrderE
 func (e *OrderEventEnvelope) GetOrderEvent() (interface{}, error) {
 
 	switch e.EventType {
-	case OrderCreatedType:
-		return e.getCreatedEvent()
+	case OrderAcceptedType:
+		return e.getAcceptedEvent()
 	case OrderAmendedType:
 		return e.getAmendedEvent()
 	case OrderCancelledType:
@@ -72,8 +72,8 @@ func (e *OrderEventEnvelope) GetOrderEvent() (interface{}, error) {
 	}
 }
 
-func (e *OrderEventEnvelope) getCreatedEvent() (interface{}, error) {
-	var event OrderCreated
+func (e *OrderEventEnvelope) getAcceptedEvent() (interface{}, error) {
+	var event OrderAccepted
 	err := e.getEvent(e.Payload, &event)
 	if err != nil {
 		return nil, err
