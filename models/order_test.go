@@ -4,58 +4,58 @@ import (
 	"testing"
 
 	"github.com/satori/go.uuid"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewOrder(t *testing.T) {
 
-	assert := assert.New(t)
+	require := require.New(t)
 
 	u, _ := uuid.FromString("d1de4242-6620-4030-b2a7-4a701631c3ba")
 	order := NewOrder(u, "TT", 10.0, 10, Sell)
 
-	assert.NotNil(order)
+	require.NotNil(order)
 }
 
 func TestOrderString(t *testing.T) {
 
-	assert := assert.New(t)
+	require := require.New(t)
 
 	order := getOrder(10, 0)
 
-	assert.Equal("[d1de4242-6620-4030-b2a7-4a701631c3ba] TT@199.990000 Buy 10/0/10 Pending", order.String())
+	require.Equal("[d1de4242-6620-4030-b2a7-4a701631c3ba] TT@199.990000 Buy 10/0/10 Pending", order.String())
 }
 
 func TestRemaining(t *testing.T) {
 
-	assert := assert.New(t)
+	require := require.New(t)
 
 	order := getOrder(10, 2)
 
-	assert.Equal(uint(8), order.Remaining())
+	require.Equal(uint(8), order.Remaining())
 }
 
 func TestAmend(t *testing.T) {
 
-	assert := assert.New(t)
+	require := require.New(t)
 
 	order := getOrder(10, 0)
 	order.Amend(2)
 
-	assert.Equal(uint(12), order.Quantity)
-	assert.Equal(Pending, order.Status)
+	require.Equal(uint(12), order.Quantity)
+	require.Equal(Pending, order.Status)
 }
 
 func TestTrade(t *testing.T) {
 
-	assert := assert.New(t)
+	require := require.New(t)
 
 	order := getOrder(10, 0)
 	order.Trade(2)
 
-	assert.Equal(uint(10), order.Quantity)
-	assert.Equal(uint(2), order.Traded)
-	assert.Equal(PartiallyFilled, order.Status)
+	require.Equal(uint(10), order.Quantity)
+	require.Equal(uint(2), order.Traded)
+	require.Equal(PartiallyFilled, order.Status)
 }
 
 func TestSetStatus(t *testing.T) {
@@ -70,12 +70,12 @@ func TestSetStatus(t *testing.T) {
 		{3, OverFilled},
 	}
 
-	assert := assert.New(t)
+	require := require.New(t)
 
 	for _, c := range cases {
 		o := getOrder(2, c.in)
 		o.setStatus()
-		assert.Equal(c.out, o.Status)
+		require.Equal(c.out, o.Status)
 	}
 }
 

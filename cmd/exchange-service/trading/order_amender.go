@@ -1,10 +1,10 @@
 package trading
 
 import (
+	"log"
 	"sync"
 	"time"
 
-	"github.com/mantzas/adaptlog"
 	"github.com/satori/go.uuid"
 	"github.com/tradsim/tradsim-go/events"
 	"github.com/tradsim/tradsim-go/models"
@@ -19,12 +19,11 @@ type Amender interface {
 type OrderAmender struct {
 	publisher events.EventPublisher
 	mu        sync.Mutex
-	logger    adaptlog.LevelLogger
 }
 
 // NewOrderAmender creates a new order amender
 func NewOrderAmender(publisher events.EventPublisher) *OrderAmender {
-	return &OrderAmender{publisher, sync.Mutex{}, adaptlog.NewStdLevelLogger("OrderAmender")}
+	return &OrderAmender{publisher, sync.Mutex{}}
 }
 
 // Amend a order in the order book
@@ -36,14 +35,14 @@ func (oa *OrderAmender) Amend(book *models.OrderBook, order *models.Order) bool 
 	prices, ok := book.Symbols[order.Symbol]
 
 	if !ok {
-		oa.logger.Errorf("Symbol %s not found", order.Symbol)
+		log.Printf("Symbol %s not found", order.Symbol)
 		return false
 	}
 
 	found, i := findPrice(prices, order.Price)
 
 	if !found {
-		oa.logger.Errorf("Price %f not found", order.Price)
+		log.Printf("Price %f not found", order.Price)
 		return false
 	}
 
@@ -85,11 +84,11 @@ func (oa *OrderAmender) publishAmendEvent(ID uuid.UUID, quantity uint) {
 	env, err := events.NewOrderEventEnvelope(ev, ev.EventType)
 
 	if err != nil {
-		oa.logger.Errorf("Failed to create envelope: %s", err.Error())
+		log.Printf("Failed to create envelope: %s", err.Error())
 	}
 
 	err = oa.publisher.Publish(env)
 	if err != nil {
-		oa.logger.Errorf("Failed to publish cancelled event: %s", ev.String())
+		log.Printf("Failed to publish cancelled event: %s", ev.String())
 	}
 }

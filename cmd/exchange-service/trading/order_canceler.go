@@ -1,10 +1,10 @@
 package trading
 
 import (
+	"log"
 	"sync"
 	"time"
 
-	"github.com/mantzas/adaptlog"
 	"github.com/satori/go.uuid"
 	"github.com/tradsim/tradsim-go/events"
 	"github.com/tradsim/tradsim-go/models"
@@ -19,12 +19,11 @@ type Canceller interface {
 type OrderCanceller struct {
 	publisher events.EventPublisher
 	mu        sync.Mutex
-	logger    adaptlog.LevelLogger
 }
 
 // NewOrderCanceller creates a order canceller
 func NewOrderCanceller(publisher events.EventPublisher) *OrderCanceller {
-	return &OrderCanceller{publisher, sync.Mutex{}, adaptlog.NewStdLevelLogger("OrderCanceller")}
+	return &OrderCanceller{publisher, sync.Mutex{}}
 }
 
 // Cancel order by id
@@ -34,7 +33,7 @@ func (oc *OrderCanceller) Cancel(book *models.OrderBook, orderID uuid.UUID) bool
 
 	order, ok := book.Orders[orderID]
 	if !ok {
-		oc.logger.Debugf("Order with id %s not found", orderID)
+		log.Printf("Order with id %s not found", orderID)
 		return false
 	}
 
@@ -53,11 +52,11 @@ func (oc *OrderCanceller) publishCancelledEvent(ID uuid.UUID) {
 	env, err := events.NewOrderEventEnvelope(ev, ev.EventType)
 
 	if err != nil {
-		oc.logger.Errorf("Failed to create envelope: %s", err.Error())
+		log.Printf("Failed to create envelope: %s", err.Error())
 	}
 
 	err = oc.publisher.Publish(env)
 	if err != nil {
-		oc.logger.Errorf("Failed to publish cancelled event: %s", ev.String())
+		log.Printf("Failed to publish cancelled event: %s", ev.String())
 	}
 }

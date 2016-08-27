@@ -6,14 +6,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"os"
-
 	"fmt"
 
 	"encoding/json"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/mantzas/adaptlog"
 	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"
 	"github.com/tradsim/tradsim-go/cmd/exchange-service/trading"
@@ -21,12 +18,6 @@ import (
 	"github.com/tradsim/tradsim-go/models"
 	common_http "github.com/tradsim/tradsim-go/net/http"
 )
-
-func TestMain(m *testing.M) {
-	adaptlog.ConfigureStdLevelLogger(adaptlog.DebugLevel, nil, "")
-	retCode := m.Run()
-	os.Exit(retCode)
-}
 
 func TestOrderCreateHandle(t *testing.T) {
 	require := require.New(t)

@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"log"
 	basehttp "net/http"
 	"time"
-
-	"github.com/mantzas/adaptlog"
 )
 
 // RestClient interface
@@ -21,12 +20,11 @@ type RestClient interface {
 // RestClientImpl defines a http client
 type RestClientImpl struct {
 	timeout time.Duration
-	logger  adaptlog.LevelLogger
 }
 
 // NewRestClientImpl creates a new client
 func NewRestClientImpl(timeout time.Duration) *RestClientImpl {
-	return &RestClientImpl{timeout, adaptlog.NewStdLevelLogger("Client")}
+	return &RestClientImpl{timeout}
 }
 
 // Get sends a HTTP GET
@@ -82,7 +80,7 @@ func (c *RestClientImpl) createJSONRequest(httpMethod string, url string, payloa
 	jsonPayload, err := json.Marshal(payload)
 
 	if err != nil {
-		c.logger.Errorf("Failed to marshal payload to JSON. %s", err)
+		log.Printf("Failed to marshal payload to JSON. %s", err)
 		return nil, err
 	}
 
@@ -101,7 +99,7 @@ func (c *RestClientImpl) createRequest(httpMethod string, url string, body io.Re
 	req, err := basehttp.NewRequest(httpMethod, url, body)
 
 	if err != nil {
-		c.logger.Errorf("Failed to create request. %s", err)
+		log.Printf("Failed to create request. %s", err)
 		return nil, err
 	}
 

@@ -2,9 +2,9 @@ package events
 
 import (
 	"encoding/json"
+	"log"
 	"time"
 
-	"github.com/mantzas/adaptlog"
 	"github.com/streadway/amqp"
 )
 
@@ -24,13 +24,12 @@ type OrderEventProcessor struct {
 	conn      *amqp.Connection
 	subCh     *amqp.Channel
 	pubCh     *amqp.Channel
-	logger    adaptlog.LevelLogger
 	processor func(envelope *OrderEventEnvelope) (string, error)
 }
 
 // NewOrderEventProcessor creates a new order event processor
 func NewOrderEventProcessor(url string, subExchange string, subQueue string, pubExchange string, processor func(envelope *OrderEventEnvelope) (string, error)) *OrderEventProcessor {
-	return &OrderEventProcessor{url, subExchange, subQueue, pubExchange, nil, nil, nil, adaptlog.NewStdLevelLogger("OrderEventProcessor"), processor}
+	return &OrderEventProcessor{url, subExchange, subQueue, pubExchange, nil, nil, nil, processor}
 }
 
 // Open handles the opening of connection, channel, echange and queue
@@ -90,7 +89,7 @@ func (p *OrderEventProcessor) Process() error {
 
 		orderID, err := p.processor(&envelope)
 		if err != nil {
-			p.logger.Errorf("Failed to process envelope %s", err)
+			log.Printf("Failed to process envelope %s", err)
 		} else {
 			d.Ack(false)
 			p.publishOrderEventStored(orderID)
@@ -107,7 +106,7 @@ func (p *OrderEventProcessor) setupConnection(url string) (*amqp.Connection, err
 		return nil, err
 	}
 
-	p.logger.Info("ampq: connection setup")
+	log.Print("ampq: connection setup")
 	return conn, nil
 }
 
@@ -131,7 +130,7 @@ func (p *OrderEventProcessor) setupSubscribeExchangeAndQueue(conn *amqp.Connecti
 		return nil, err
 	}
 
-	p.logger.Infof("ampq: exchange %s declared", exchange)
+	log.Printf("ampq: exchange %s declared", exchange)
 
 	q, err := ch.QueueDeclare(
 		queue, // name
@@ -146,7 +145,7 @@ func (p *OrderEventProcessor) setupSubscribeExchangeAndQueue(conn *amqp.Connecti
 		return nil, err
 	}
 
-	p.logger.Infof("ampq: queue %s declared", queue)
+	log.Printf("ampq: queue %s declared", queue)
 
 	err = ch.QueueBind(
 		q.Name,   // queue name
@@ -158,8 +157,7 @@ func (p *OrderEventProcessor) setupSubscribeExchangeAndQueue(conn *amqp.Connecti
 		return nil, err
 	}
 
-	p.logger.Infof("ampq: exchange %s with queue %s bound", exchange, queue)
-
+	log.Printf("ampq: exchange %s with queue %s bound", exchange, queue)
 	return ch, nil
 }
 
@@ -178,7 +176,7 @@ func (p *OrderEventProcessor) getSubscriptionChannel(ch *amqp.Channel, queue str
 		return nil, err
 	}
 
-	p.logger.Infof("ampq: subscription on queue %s set", queue)
+	log.Printf("ampq: subscription on queue %s set", queue)
 
 	return msgs, nil
 }
@@ -225,9 +223,9 @@ func (p *OrderEventProcessor) publishOrderEventStored(orderID string) error {
 		})
 
 	if err != nil {
-		p.logger.Errorf("Failed to publish stored event")
+		log.Print("Failed to publish stored event")
 	} else {
-		p.logger.Debugf("Stored event published")
+		log.Print("Stored event published")
 	}
 
 	return err

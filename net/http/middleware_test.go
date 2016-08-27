@@ -3,19 +3,11 @@ package http
 import (
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/mantzas/adaptlog"
 	"github.com/stretchr/testify/require"
 )
-
-func TestMain(m *testing.M) {
-	adaptlog.ConfigureStdLevelLogger(adaptlog.DebugLevel, nil, "")
-	retCode := m.Run()
-	os.Exit(retCode)
-}
 
 func TestGETValidationMiddlewareSuccess(t *testing.T) {
 

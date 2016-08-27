@@ -2,13 +2,13 @@ package main
 
 import (
 	"errors"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	_ "github.com/lib/pq"
-	"github.com/mantzas/adaptlog"
 	"github.com/mantzas/incata"
 	"github.com/mantzas/incata/marshal"
 	incatamodel "github.com/mantzas/incata/model"
@@ -27,7 +27,9 @@ func main() {
 	var connectionString = "postgres://postgres:1234@localhost/orderevents?sslmode=disable"
 	var dbName = "orderevents"
 
-	adaptlog.ConfigureStdLevelLogger(adaptlog.DebugLevel, nil, "main")
+	log.SetOutput(os.Stdout)
+	log.SetFlags(log.Ldate | log.Lmicroseconds | log.LUTC | log.Lshortfile)
+	log.SetPrefix("ews ")
 
 	setupIncata(connectionString, dbName)
 
@@ -39,23 +41,21 @@ func main() {
 	go func() {
 		<-c
 		processor.Close()
-		adaptlog.Level.Infoln("Event writer service stopped.")
+		log.Printf("Event writer service stopped.")
 		os.Exit(1)
 	}()
 
 	err := processor.Open()
 	if err != nil {
-		adaptlog.Level.Errorf("Failed to open processor! %s", err)
-		return
+		log.Fatalf("Failed to open processor! %s", err)
 	}
 
 	err = processor.Process()
 	if err != nil {
-		adaptlog.Level.Errorf("Processor failed to process! %s", err)
-		return
+		log.Fatalf("Processor failed to process! %s", err)
 	}
 
-	adaptlog.Level.Infoln("Event writer service exiting")
+	log.Printf("Event writer service exiting")
 }
 
 func setupIncata(connection string, dbName string) {
@@ -87,19 +87,19 @@ func processEnvelope(envelope *events.OrderEventEnvelope) (string, error) {
 	case events.OrderAcceptedType:
 		event := untypedEvent.(events.OrderAccepted)
 		sourceID, occured, version, err = getOrderEventData(event.OrderEvent)
-		adaptlog.Level.Infof("Order accepted received: %s", event.String())
+		log.Printf("Order accepted received: %s", event.String())
 	case events.OrderAmendedType:
 		event := untypedEvent.(events.OrderAmended)
 		sourceID, occured, version, err = getOrderEventData(event.OrderEvent)
-		adaptlog.Level.Infof("Order amended received: %s", event.String())
+		log.Printf("Order amended received: %s", event.String())
 	case events.OrderCancelledType:
 		event := untypedEvent.(events.OrderCancelled)
 		sourceID, occured, version, err = getOrderEventData(event.OrderEvent)
-		adaptlog.Level.Infof("Order cancelled received: %s", event.String())
+		log.Printf("Order cancelled received: %s", event.String())
 	case events.OrderTradedType:
 		event := untypedEvent.(events.OrderTraded)
 		sourceID, occured, version, err = getOrderEventData(event.OrderEvent)
-		adaptlog.Level.Infof("Order traded received: %s", event.String())
+		log.Printf("Order traded received: %s", event.String())
 	default:
 		return "", errors.New("invalid order event type received")
 	}
@@ -113,7 +113,7 @@ func processEnvelope(envelope *events.OrderEventEnvelope) (string, error) {
 	appender, err := incata.NewAppender()
 
 	if err != nil {
-		adaptlog.Level.Errorf("Faile to create a appender! %s", err)
+		log.Printf("Faile to create a appender! %s", err)
 		return "", err
 	}
 

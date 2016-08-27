@@ -2,9 +2,9 @@ package trading
 
 import (
 	"errors"
+	"log"
 	"sync"
 
-	"github.com/mantzas/adaptlog"
 	"github.com/tradsim/tradsim-go/models"
 )
 
@@ -15,13 +15,12 @@ type Appender interface {
 
 // OrderAppender adds order to the book
 type OrderAppender struct {
-	mu     sync.Mutex
-	logger adaptlog.LevelLogger
+	mu sync.Mutex
 }
 
 // NewOrderAppender creates a new order appender
 func NewOrderAppender() *OrderAppender {
-	return &OrderAppender{sync.Mutex{}, adaptlog.NewStdLevelLogger("OrderAppender")}
+	return &OrderAppender{sync.Mutex{}}
 }
 
 // Append the order to the book
@@ -45,18 +44,18 @@ func (oa *OrderAppender) Append(book *models.OrderBook, order *models.Order) err
 	found, i := findPrice(prices, order.Price)
 
 	if found {
-		oa.logger.Debugf("Price %f found, adding to price", order.Price)
+		log.Printf("Price %f found, adding to price", order.Price)
 		addOrderToPrice(prices[i], order)
 	} else {
-		oa.logger.Debugf("Price %f not found", order.Price)
+		log.Printf("Price %f not found", order.Price)
 		price := models.NewOrderPrice(order.Price)
 		addOrderToPrice(price, order)
 
 		if i == len(prices) { //append to the end
 			prices = append(prices, price)
-			oa.logger.Debugf("Price %f appended to the end", order.Price)
+			log.Printf("Price %f appended to the end", order.Price)
 		} else { // append at i
-			oa.logger.Debugf("Price %f appended at %d", order.Price, i)
+			log.Printf("Price %f appended at %d", order.Price, i)
 			if i == 0 {
 				prices = append([]*models.OrderPrice{price}, prices...)
 			} else {
@@ -91,7 +90,7 @@ func (oa *OrderAppender) addNewSymbol(book *models.OrderBook, order *models.Orde
 	price := models.NewOrderPrice(order.Price)
 	addOrderToPrice(price, order)
 	book.Symbols[order.Symbol] = []*models.OrderPrice{price}
-	oa.logger.Debugf("Symbol %s appended", order.Symbol)
+	log.Printf("Symbol %s appended", order.Symbol)
 }
 
 func addOrderToPrice(price *models.OrderPrice, order *models.Order) {

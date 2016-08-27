@@ -2,12 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/mantzas/adaptlog"
 	uuid "github.com/satori/go.uuid"
 	"github.com/tradsim/tradsim-go/cmd/exchange-service/trading"
 	"github.com/tradsim/tradsim-go/events"
@@ -31,12 +31,11 @@ type OrderHandler struct {
 	trader    trading.Trader
 	canceller trading.Canceller
 	publisher events.EventPublisher
-	logger    adaptlog.LevelLogger
 }
 
 // NewOrderHandler creates a new order handler
 func NewOrderHandler(book *models.OrderBook, appender trading.Appender, amender trading.Amender, trader trading.Trader, canceller trading.Canceller, publisher events.EventPublisher) *OrderHandler {
-	return &OrderHandler{book, appender, amender, trader, canceller, publisher, adaptlog.NewStdLevelLogger("OrderHandler")}
+	return &OrderHandler{book, appender, amender, trader, canceller, publisher}
 }
 
 // OrderCreateHandle is the handler for the orders
@@ -53,7 +52,7 @@ func (oh *OrderHandler) OrderCreateHandle(w http.ResponseWriter, r *http.Request
 	acceptedEvent := events.NewOrderAccepted(order.ID.String(), time.Now().UTC(), order.Symbol, order.Price, order.Quantity, order.Direction, 1)
 	envelope, err := events.NewOrderEventEnvelope(acceptedEvent, acceptedEvent.EventType)
 	if err != nil {
-		oh.logger.Errorf("Failed to create order accepted event envelope! %s", err)
+		log.Printf("Failed to create order accepted event envelope! %s", err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
@@ -64,7 +63,7 @@ func (oh *OrderHandler) OrderCreateHandle(w http.ResponseWriter, r *http.Request
 	if order.Status.IsTradeable() {
 		err = oh.appender.Append(oh.book, order)
 		if err != nil {
-			oh.logger.Errorf("Failed to append order! %s", err)
+			log.Printf("Failed to append order! %s", err)
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
@@ -99,7 +98,7 @@ func (oh *OrderHandler) OrderCancelHandle(w http.ResponseWriter, r *http.Request
 	orderID := uuid.FromStringOrNil(strings.ToUpper(p.ByName("orderid")))
 
 	if orderID == uuid.Nil {
-		oh.logger.Error("Failed to get orderID!")
+		log.Print("Failed to get orderID!")
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
@@ -108,10 +107,10 @@ func (oh *OrderHandler) OrderCancelHandle(w http.ResponseWriter, r *http.Request
 
 	if cancelled {
 		w.WriteHeader(http.StatusAccepted)
-		oh.logger.Debugf("OrderCancelHandle: Order %s cancelled", orderID.String())
+		log.Printf("OrderCancelHandle: Order %s cancelled", orderID.String())
 	} else {
 		http.NotFound(w, r)
-		oh.logger.Debugf("OrderCancelHandle: Order %s not found", orderID.String())
+		log.Printf("OrderCancelHandle: Order %s not found", orderID.String())
 	}
 
 }
@@ -125,19 +124,19 @@ func (oh *OrderHandler) getPayloadData(r *http.Request) (OrderDTO, models.TradeD
 	err := json.NewDecoder(r.Body).Decode(&dto)
 
 	if err != nil {
-		oh.logger.Errorf("Failed to bind model! %s", err)
+		log.Printf("Failed to bind model! %s", err)
 		return dto, direction, orderID, err
 	}
 
 	direction, err = models.TradeDirectionFromString(dto.Direction)
 	if err != nil {
-		oh.logger.Errorf("Failed to getting trade direction! %s", err)
+		log.Printf("Failed to getting trade direction! %s", err)
 		return dto, direction, orderID, err
 	}
 
 	orderID, err = uuid.FromString(dto.ID)
 	if err != nil {
-		oh.logger.Errorf("Failed to getting order id! %s", err)
+		log.Printf("Failed to getting order id! %s", err)
 		return dto, direction, orderID, err
 	}
 

@@ -1,12 +1,12 @@
 package http
 
 import (
+	"log"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/mantzas/adaptlog"
 )
 
 type statusLoggingResponseWriter struct {
@@ -73,7 +73,7 @@ func LoggingMiddleware(next httprouter.Handle) httprouter.Handle {
 		lw := &statusLoggingResponseWriter{-1, false, w}
 		startTime := time.Now()
 		next(lw, r, ps)
-		adaptlog.NewStdLevelLogger("LoggingMiddleware").Infof("host=%s method=%s route=%s status=%d time=%s params=%s", r.Host, r.Method, r.URL.String(), lw.status, time.Since(startTime), ps)
+		log.Printf("host=%s method=%s route=%s status=%d time=%s params=%s", r.Host, r.Method, r.URL.String(), lw.status, time.Since(startTime), ps)
 	}
 }
 
@@ -84,7 +84,7 @@ func RecoveryMiddleware(next httprouter.Handle) httprouter.Handle {
 
 		defer func() {
 			if err := recover(); err != nil {
-				adaptlog.NewStdLevelLogger("RecoveryMiddleware").Errorf("[ERROR] %s", err)
+				log.Printf("[ERROR] %s", err)
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}
 		}()
@@ -98,11 +98,9 @@ func POSTJSONValidationMiddleware(next httprouter.Handle) httprouter.Handle {
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
-		logger := adaptlog.NewStdLevelLogger("POSTJSONValidationMiddleware")
-
 		if r.Method != http.MethodPost {
 
-			logger.Warnf("Http method POST was expected, but received %s instead", r.Method)
+			log.Printf("Http method POST was expected, but received %s instead", r.Method)
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
@@ -111,7 +109,7 @@ func POSTJSONValidationMiddleware(next httprouter.Handle) httprouter.Handle {
 
 		if !strings.HasPrefix(contentType, "application/json") {
 
-			logger.Warnf("Content type is not 'application/json', but %s instead", contentType)
+			log.Printf("Content type is not 'application/json', but %s instead", contentType)
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
@@ -125,11 +123,9 @@ func GETValidationMiddleware(next httprouter.Handle) httprouter.Handle {
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
-		logger := adaptlog.NewStdLevelLogger("GETValidationMiddleware")
-
 		if r.Method != http.MethodGet {
 
-			logger.Warnf("Http method GET was expected, but received %s instead", r.Method)
+			log.Printf("Http method GET was expected, but received %s instead", r.Method)
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
@@ -143,11 +139,9 @@ func PUTJSONValidationMiddleware(next httprouter.Handle) httprouter.Handle {
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
-		logger := adaptlog.NewStdLevelLogger("PUTJSONValidationMiddleware")
-
 		if r.Method != http.MethodPut {
 
-			logger.Warnf("Http method PUT was expected, but received %s instead", r.Method)
+			log.Printf("Http method PUT was expected, but received %s instead", r.Method)
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
@@ -156,7 +150,7 @@ func PUTJSONValidationMiddleware(next httprouter.Handle) httprouter.Handle {
 
 		if !strings.HasPrefix(contentType, "application/json") {
 
-			logger.Warnf("Content type is not 'application/json', but %s instead", contentType)
+			log.Printf("Content type is not 'application/json', but %s instead", contentType)
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
@@ -170,11 +164,9 @@ func DELETEValidationMiddleware(next httprouter.Handle) httprouter.Handle {
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
-		logger := adaptlog.NewStdLevelLogger("DELETEValidationMiddleware")
-
 		if r.Method != http.MethodDelete {
 
-			logger.Warnf("Http method DELETE was expected, but received %s instead", r.Method)
+			log.Printf("Http method DELETE was expected, but received %s instead", r.Method)
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}

@@ -2,8 +2,8 @@ package events
 
 import (
 	"encoding/json"
+	"log"
 
-	"github.com/mantzas/adaptlog"
 	"github.com/streadway/amqp"
 )
 
@@ -16,7 +16,6 @@ type EventPublisher interface {
 
 // RabbitMqEventPublisher create implementation of a rabbit mq order event publisher
 type RabbitMqEventPublisher struct {
-	logger     adaptlog.LevelLogger
 	channel    *amqp.Channel
 	connection *amqp.Connection
 	exchange   string
@@ -26,7 +25,7 @@ type RabbitMqEventPublisher struct {
 // NewRabbitMqEventPublisher creates a new rabbit mq event publisher
 func NewRabbitMqEventPublisher(url string, exchange string) *RabbitMqEventPublisher {
 
-	return &RabbitMqEventPublisher{logger: adaptlog.NewStdLevelLogger("RabbitMqEventPublisher"), exchange: exchange, url: url}
+	return &RabbitMqEventPublisher{exchange: exchange, url: url}
 }
 
 // Open handles the opening of a connection, setting up a channel and declaring a exchange
@@ -95,6 +94,6 @@ func (p *RabbitMqEventPublisher) Publish(envelope *OrderEventEnvelope) error {
 		return err
 	}
 
-	p.logger.Info("Envelope published!")
+	log.Print("Envelope published!")
 	return nil
 }

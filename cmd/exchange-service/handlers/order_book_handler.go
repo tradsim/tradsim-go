@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"encoding/json"
@@ -8,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/mantzas/adaptlog"
 	"github.com/tradsim/tradsim-go/models"
 )
 
@@ -29,19 +29,18 @@ type SymbolResponse struct {
 
 // OrderBookHandler handles book requests
 type OrderBookHandler struct {
-	book   *models.OrderBook
-	logger adaptlog.LevelLogger
+	book *models.OrderBook
 }
 
 // NewOrderBookHandler creates a new order book handler
 func NewOrderBookHandler(book *models.OrderBook) *OrderBookHandler {
-	return &OrderBookHandler{book, adaptlog.NewStdLevelLogger("OrderBookHandler")}
+	return &OrderBookHandler{book}
 }
 
 // GetSymbolsHandler is the handler for getting symbols from the order book
 func (obh *OrderBookHandler) GetSymbolsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-	obh.logger.Debug("GetSymbolsHandler: Request symbols")
+	log.Printf("GetSymbolsHandler: Request symbols")
 
 	var symbols []SymbolResponse
 
@@ -51,7 +50,7 @@ func (obh *OrderBookHandler) GetSymbolsHandler(w http.ResponseWriter, r *http.Re
 	}
 
 	if len(symbols) == 0 {
-		obh.logger.Debug("GetSymbolsHandler: Symbols not found")
+		log.Printf("GetSymbolsHandler: Symbols not found")
 		http.NotFound(w, r)
 		return
 	}
@@ -59,7 +58,7 @@ func (obh *OrderBookHandler) GetSymbolsHandler(w http.ResponseWriter, r *http.Re
 	encoded, _ := json.Marshal(symbols)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(encoded)
-	obh.logger.Debugf("GetSymbolsHandler: Returned %d symbols", len(symbols))
+	log.Printf("GetSymbolsHandler: Returned %d symbols", len(symbols))
 }
 
 // GetSymbolHandler is the handler for getting a symbol from the order book
@@ -67,12 +66,12 @@ func (obh *OrderBookHandler) GetSymbolHandler(w http.ResponseWriter, r *http.Req
 
 	symbol := strings.ToUpper(p.ByName("symbol"))
 
-	obh.logger.Debugf("GetSymbolHandler: Request %s", symbol)
+	log.Printf("GetSymbolHandler: Request %s", symbol)
 
 	prices, ok := obh.book.Symbols[symbol]
 
 	if !ok {
-		obh.logger.Debugf("GetSymbolHandler: Symbol %s not found", symbol)
+		log.Printf("GetSymbolHandler: Symbol %s not found", symbol)
 		http.NotFound(w, r)
 		return
 	}
@@ -82,7 +81,7 @@ func (obh *OrderBookHandler) GetSymbolHandler(w http.ResponseWriter, r *http.Req
 	encoded, _ := json.Marshal(response)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(encoded)
-	obh.logger.Debugf("GetSymbolHandler: Symbol %s returned", symbol)
+	log.Printf("GetSymbolHandler: Symbol %s returned", symbol)
 }
 
 func getSymbolResponse(symbol string, prices []*models.OrderPrice) SymbolResponse {

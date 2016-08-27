@@ -1,19 +1,11 @@
 package events
 
 import (
-	"os"
 	"testing"
 	"time"
 
-	"github.com/mantzas/adaptlog"
 	"github.com/stretchr/testify/require"
 )
-
-func TestMain(m *testing.M) {
-	adaptlog.ConfigureStdLevelLogger(adaptlog.DebugLevel, nil, "")
-	retCode := m.Run()
-	os.Exit(retCode)
-}
 
 func TestOrderAmendedString(t *testing.T) {
 

@@ -1,10 +1,10 @@
 package trading
 
 import (
+	"log"
 	"sync"
 	"time"
 
-	"github.com/mantzas/adaptlog"
 	"github.com/satori/go.uuid"
 	"github.com/tradsim/tradsim-go/events"
 	"github.com/tradsim/tradsim-go/models"
@@ -17,14 +17,13 @@ type Trader interface {
 
 // OrderTrader implementation
 type OrderTrader struct {
-	logger    adaptlog.LevelLogger
 	publisher events.EventPublisher
 	mu        sync.Mutex
 }
 
 // NewOrderTrader creates a new order trader
 func NewOrderTrader(publisher events.EventPublisher) *OrderTrader {
-	return &OrderTrader{adaptlog.NewStdLevelLogger("OrderTrader"), publisher, sync.Mutex{}}
+	return &OrderTrader{publisher, sync.Mutex{}}
 }
 
 // Trade processes a order against the book
@@ -35,7 +34,7 @@ func (ot *OrderTrader) Trade(book *models.OrderBook, order *models.Order) {
 
 	prices, ok := book.Symbols[order.Symbol]
 	if !ok {
-		ot.logger.Debugf("Symbol %s not in book", order.Symbol)
+		log.Printf("Symbol %s not in book", order.Symbol)
 		return
 	}
 
@@ -49,10 +48,10 @@ func (ot *OrderTrader) Trade(book *models.OrderBook, order *models.Order) {
 func (ot *OrderTrader) tradePricesBuy(prices []*models.OrderPrice, order *models.Order) {
 	for _, price := range prices {
 		if price.Price > order.Price {
-			ot.logger.Debugf("Price %f is greater than order price %f", price.Price, order.Price)
+			log.Printf("Price %f is greater than order price %f", price.Price, order.Price)
 			return
 		}
-		ot.logger.Debugf("Trading with price %f. order price %f", price.Price, order.Price)
+		log.Printf("Trading with price %f. order price %f", price.Price, order.Price)
 		ot.tradePrice(price, order)
 	}
 }
@@ -61,10 +60,10 @@ func (ot *OrderTrader) tradePricesSell(prices []*models.OrderPrice, order *model
 
 	for i := len(prices) - 1; i >= 0; i-- {
 		if prices[i].Price < order.Price {
-			ot.logger.Debugf("Price %f is less than order price %f", prices[i].Price, order.Price)
+			log.Printf("Price %f is less than order price %f", prices[i].Price, order.Price)
 			return
 		}
-		ot.logger.Debugf("Trading with price %f. order price %f", prices[i].Price, order.Price)
+		log.Printf("Trading with price %f. order price %f", prices[i].Price, order.Price)
 		ot.tradePrice(prices[i], order)
 	}
 }
@@ -73,25 +72,25 @@ func (ot *OrderTrader) tradePrice(price *models.OrderPrice, order *models.Order)
 
 	if order.Direction == models.Buy {
 		if price.Sell.Quantity > 0 {
-			ot.logger.Debugf("Sell quantity on price %f is %d and order count %d", price.Price, price.Sell.Quantity, len(price.Sell.Orders))
+			log.Printf("Sell quantity on price %f is %d and order count %d", price.Price, price.Sell.Quantity, len(price.Sell.Orders))
 			for _, existing := range price.Sell.Orders {
 				ot.trade(existing, order)
 			}
 			price.Sell.Quantity = ot.compactOrdersAndGetQuantity(&price.Sell.Orders)
-			ot.logger.Debugf("Sell quantity after trade on price %f is %d and order count %d", price.Price, price.Sell.Quantity, len(price.Sell.Orders))
+			log.Printf("Sell quantity after trade on price %f is %d and order count %d", price.Price, price.Sell.Quantity, len(price.Sell.Orders))
 		} else {
-			ot.logger.Debugf("Sell quantity on price %f is zero", price.Price)
+			log.Printf("Sell quantity on price %f is zero", price.Price)
 		}
 	} else {
 		if price.Buy.Quantity > 0 {
-			ot.logger.Debugf("Buy quantity on price %f is %d and order count %d", price.Price, price.Buy.Quantity, len(price.Buy.Orders))
+			log.Printf("Buy quantity on price %f is %d and order count %d", price.Price, price.Buy.Quantity, len(price.Buy.Orders))
 			for _, existing := range price.Buy.Orders {
 				ot.trade(existing, order)
 			}
 			price.Buy.Quantity = ot.compactOrdersAndGetQuantity(&price.Buy.Orders)
-			ot.logger.Debugf("Buy quantity after trade on price %f is %d and order count %d", price.Price, price.Buy.Quantity, len(price.Buy.Orders))
+			log.Printf("Buy quantity after trade on price %f is %d and order count %d", price.Price, price.Buy.Quantity, len(price.Buy.Orders))
 		} else {
-			ot.logger.Debugf("Buy quantity on price %f is zero", price.Price)
+			log.Printf("Buy quantity on price %f is zero", price.Price)
 		}
 	}
 }
@@ -122,12 +121,12 @@ func (ot *OrderTrader) publishTradedEvent(ID uuid.UUID, price float64, traded ui
 	env, err := events.NewOrderEventEnvelope(ev, ev.EventType)
 
 	if err != nil {
-		ot.logger.Errorf("Failed to create envelope: %s", err.Error())
+		log.Printf("Failed to create envelope: %s", err.Error())
 	}
 
 	err = ot.publisher.Publish(env)
 	if err != nil {
-		ot.logger.Errorf("Failed to publish traded event: %s", ev.String())
+		log.Printf("Failed to publish traded event: %s", ev.String())
 	}
 }
 
