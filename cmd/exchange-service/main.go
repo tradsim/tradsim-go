@@ -39,14 +39,16 @@ func main() {
 
 	orderBook := models.NewOrderBook()
 	appender := trading.NewOrderAppender()
+	amender := trading.NewOrderAmender(publisher)
 	trader := trading.NewOrderTrader(publisher)
 	canceller := trading.NewOrderCanceller(publisher)
-	orderHandler := handlers.NewOrderHandler(orderBook, appender, trader, canceller, publisher)
+	orderHandler := handlers.NewOrderHandler(orderBook, appender, amender, trader, canceller, publisher)
 	orderBookHandler := handlers.NewOrderBookHandler(orderBook)
 
 	router := httprouter.New()
 
 	router.POST("/orders", common_http.POSTJSONValidationMiddleware(orderHandler.OrderCreateHandle))
+	router.PUT("/orders", common_http.PUTJSONValidationMiddleware(orderHandler.OrderAmendHandle))
 	router.DELETE("/orders/:orderid", common_http.DELETEValidationMiddleware(orderHandler.OrderCancelHandle))
 	router.GET("/orderbook", common_http.GETValidationMiddleware(orderBookHandler.GetSymbolsHandler))
 	router.GET("/orderbook/:symbol", common_http.GETValidationMiddleware(orderBookHandler.GetSymbolHandler))

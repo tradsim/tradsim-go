@@ -14,8 +14,8 @@ import (
 	"github.com/tradsim/tradsim-go/models"
 )
 
-// OrderCreate model
-type OrderCreate struct {
+// OrderDTO model
+type OrderDTO struct {
 	ID        string  `json:"id"`        // unique id (uuid)
 	Symbol    string  `json:"symbol"`    // symbol
 	Quantity  uint    `json:"quantity"`  // quantity
@@ -27,6 +27,7 @@ type OrderCreate struct {
 type OrderHandler struct {
 	book      *models.OrderBook
 	appender  trading.Appender
+	amender   trading.Amender
 	trader    trading.Trader
 	canceller trading.Canceller
 	publisher events.EventPublisher
@@ -34,38 +35,20 @@ type OrderHandler struct {
 }
 
 // NewOrderHandler creates a new order handler
-func NewOrderHandler(book *models.OrderBook, appender trading.Appender, trader trading.Trader, canceller trading.Canceller, publisher events.EventPublisher) *OrderHandler {
-	return &OrderHandler{book, appender, trader, canceller, publisher, adaptlog.NewStdLevelLogger("OrderHandler")}
+func NewOrderHandler(book *models.OrderBook, appender trading.Appender, amender trading.Amender, trader trading.Trader, canceller trading.Canceller, publisher events.EventPublisher) *OrderHandler {
+	return &OrderHandler{book, appender, amender, trader, canceller, publisher, adaptlog.NewStdLevelLogger("OrderHandler")}
 }
 
 // OrderCreateHandle is the handler for the orders
 func (oh *OrderHandler) OrderCreateHandle(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-	var orderCreate OrderCreate
-
-	err := json.NewDecoder(r.Body).Decode(&orderCreate)
-
+	dto, direction, orderID, err := oh.getPayloadData(r)
 	if err != nil {
-		oh.logger.Errorf("Failed to bind model! %s", err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
-	direction, err := models.TradeDirectionFromString(orderCreate.Direction)
-	if err != nil {
-		oh.logger.Errorf("Failed to getting trade direction! %s", err)
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-
-	orderID, err := uuid.FromString(orderCreate.ID)
-	if err != nil {
-		oh.logger.Errorf("Failed to getting order id! %s", err)
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-
-	order := models.NewOrder(orderID, orderCreate.Symbol, orderCreate.Price, orderCreate.Quantity, direction)
+	order := models.NewOrder(orderID, dto.Symbol, dto.Price, dto.Quantity, direction)
 
 	acceptedEvent := events.NewOrderAccepted(order.ID.String(), time.Now().UTC(), order.Symbol, order.Price, order.Quantity, order.Direction, 1)
 	envelope, err := events.NewOrderEventEnvelope(acceptedEvent, acceptedEvent.EventType)
@@ -90,6 +73,26 @@ func (oh *OrderHandler) OrderCreateHandle(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusAccepted)
 }
 
+// OrderAmendHandle is the handler for amending a order
+func (oh *OrderHandler) OrderAmendHandle(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+
+	dto, direction, orderID, err := oh.getPayloadData(r)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	order := models.NewOrder(orderID, dto.Symbol, dto.Price, dto.Quantity, direction)
+
+	amended := oh.amender.Amend(oh.book, order)
+
+	if amended {
+		w.WriteHeader(http.StatusAccepted)
+	} else {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+	}
+}
+
 // OrderCancelHandle is the handler for cancelling a order
 func (oh *OrderHandler) OrderCancelHandle(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
@@ -111,4 +114,32 @@ func (oh *OrderHandler) OrderCancelHandle(w http.ResponseWriter, r *http.Request
 		oh.logger.Debugf("OrderCancelHandle: Order %s not found", orderID.String())
 	}
 
+}
+
+func (oh *OrderHandler) getPayloadData(r *http.Request) (OrderDTO, models.TradeDirection, uuid.UUID, error) {
+
+	var dto OrderDTO
+	var direction models.TradeDirection
+	var orderID uuid.UUID
+
+	err := json.NewDecoder(r.Body).Decode(&dto)
+
+	if err != nil {
+		oh.logger.Errorf("Failed to bind model! %s", err)
+		return dto, direction, orderID, err
+	}
+
+	direction, err = models.TradeDirectionFromString(dto.Direction)
+	if err != nil {
+		oh.logger.Errorf("Failed to getting trade direction! %s", err)
+		return dto, direction, orderID, err
+	}
+
+	orderID, err = uuid.FromString(dto.ID)
+	if err != nil {
+		oh.logger.Errorf("Failed to getting order id! %s", err)
+		return dto, direction, orderID, err
+	}
+
+	return dto, direction, orderID, nil
 }

@@ -53,3 +53,13 @@ type MockCanceller struct {
 func (mc *MockCanceller) Cancel(book *models.OrderBook, orderID uuid.UUID) bool {
 	return mc.Cancelled
 }
+
+// MockAmender for mocking the amender
+type MockAmender struct {
+	Amended bool
+}
+
+// Amend the order
+func (ma *MockAmender) Amend(book *models.OrderBook, order *models.Order) bool {
+	return ma.Amended
+}
