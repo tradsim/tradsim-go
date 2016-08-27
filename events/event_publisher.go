@@ -2,7 +2,6 @@ package events
 
 import (
 	"encoding/json"
-	"log"
 
 	"github.com/streadway/amqp"
 )
@@ -94,6 +93,5 @@ func (p *RabbitMqEventPublisher) Publish(envelope *OrderEventEnvelope) error {
 		return err
 	}
 
-	log.Print("Envelope published!")
 	return nil
 }

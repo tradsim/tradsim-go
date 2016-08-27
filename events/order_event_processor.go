@@ -224,8 +224,6 @@ func (p *OrderEventProcessor) publishOrderEventStored(orderID string) error {
 
 	if err != nil {
 		log.Print("Failed to publish stored event")
-	} else {
-		log.Print("Stored event published")
 	}
 
 	return err
