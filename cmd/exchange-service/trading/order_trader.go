@@ -110,29 +110,10 @@ func (ot *OrderTrader) trade(existing *models.Order, new *models.Order) {
 		traded = existing.Remaining()
 	}
 
-	ot.tradeOrderQuantity(existing, traded)
+	existing.Trade(traded)
 	ot.publishTradedEvent(existing.ID, existing.Price, traded)
-	ot.tradeOrderQuantity(new, traded)
+	new.Trade(traded)
 	ot.publishTradedEvent(new.ID, existing.Price, traded)
-}
-
-// Trade1 the quantity against the order
-func (ot *OrderTrader) tradeOrderQuantity(o *models.Order, quantity uint) {
-	o.Traded += quantity
-	ot.setOrderStatus(o)
-	ot.logger.Debugf("Trading %d leaving %s", quantity, o)
-}
-
-func (ot *OrderTrader) setOrderStatus(o *models.Order) {
-	if o.Traded == uint(0) {
-		o.Status = models.Pending
-	} else if o.Traded < o.Quantity {
-		o.Status = models.PartiallyFilled
-	} else if o.Traded == o.Quantity {
-		o.Status = models.FullyFilled
-	} else {
-		o.Status = models.OverFilled
-	}
 }
 
 func (ot *OrderTrader) publishTradedEvent(ID uuid.UUID, price float64, traded uint) {
