@@ -2,8 +2,11 @@ package trading
 
 import (
 	"sync"
+	"time"
 
 	"github.com/mantzas/adaptlog"
+	"github.com/satori/go.uuid"
+	"github.com/tradsim/tradsim-go/events"
 	"github.com/tradsim/tradsim-go/models"
 )
 
@@ -14,13 +17,14 @@ type Amender interface {
 
 // OrderAmender amends a order in the book
 type OrderAmender struct {
-	mu     sync.Mutex
-	logger adaptlog.LevelLogger
+	publisher events.EventPublisher
+	mu        sync.Mutex
+	logger    adaptlog.LevelLogger
 }
 
 // NewOrderAmender creates a new order amender
-func NewOrderAmender() *OrderAmender {
-	return &OrderAmender{sync.Mutex{}, adaptlog.NewStdLevelLogger("OrderAmender")}
+func NewOrderAmender(publisher events.EventPublisher) *OrderAmender {
+	return &OrderAmender{publisher, sync.Mutex{}, adaptlog.NewStdLevelLogger("OrderAmender")}
 }
 
 // Amend a order in the order book
@@ -43,6 +47,8 @@ func (oa *OrderAmender) Amend(book *models.OrderBook, order *models.Order) bool 
 		return false
 	}
 
+	var amended = false
+
 	if order.Direction == models.Buy {
 
 		for _, o := range prices[i].Buy.Orders {
@@ -50,7 +56,7 @@ func (oa *OrderAmender) Amend(book *models.OrderBook, order *models.Order) bool 
 			if o.ID == order.ID {
 				prices[i].Buy.Quantity += order.Quantity
 				o.Amend(order.Quantity)
-				return true
+				amended = true
 			}
 		}
 
@@ -61,10 +67,29 @@ func (oa *OrderAmender) Amend(book *models.OrderBook, order *models.Order) bool 
 			if o.ID == order.ID {
 				prices[i].Sell.Quantity += order.Quantity
 				o.Amend(order.Quantity)
-				return true
+				amended = true
 			}
 		}
 	}
 
-	return false
+	if amended {
+		oa.publishAmendEvent(order.ID, order.Quantity)
+	}
+
+	return amended
+}
+
+func (oa *OrderAmender) publishAmendEvent(ID uuid.UUID, quantity uint) {
+
+	ev := events.NewOrderAmended(ID.String(), quantity, time.Now().UTC(), uint(1))
+	env, err := events.NewOrderEventEnvelope(ev, ev.EventType)
+
+	if err != nil {
+		oa.logger.Errorf("Failed to create envelope: %s", err.Error())
+	}
+
+	err = oa.publisher.Publish(env)
+	if err != nil {
+		oa.logger.Errorf("Failed to publish cancelled event: %s", ev.String())
+	}
 }

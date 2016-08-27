@@ -5,6 +5,7 @@ import (
 
 	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"
+	"github.com/tradsim/tradsim-go/mocks"
 	"github.com/tradsim/tradsim-go/models"
 )
 
@@ -16,7 +17,7 @@ func TestAmendMissingSymbolReturnsFalse(t *testing.T) {
 
 	order := models.NewOrder(uuid.NewV4(), "TT", 199.99, 10, models.Sell)
 
-	am := NewOrderAmender()
+	am := NewOrderAmender(&mocks.MockPublisher{})
 
 	require.False(am.Amend(book, order))
 }
@@ -32,7 +33,7 @@ func TestAmendMissingPriceReturnsFalse(t *testing.T) {
 	ap := NewOrderAppender()
 	ap.Append(book, order1)
 
-	am := NewOrderAmender()
+	am := NewOrderAmender(&mocks.MockPublisher{})
 
 	order2 := models.NewOrder(uuid.NewV4(), "TT", 299.99, 10, models.Sell)
 
@@ -50,7 +51,7 @@ func TestAmendMissingOrderReturnsFalse(t *testing.T) {
 	ap := NewOrderAppender()
 	ap.Append(book, order1)
 
-	am := NewOrderAmender()
+	am := NewOrderAmender(&mocks.MockPublisher{})
 
 	order2 := models.NewOrder(uuid.NewV4(), "TT", 199.99, 10, models.Sell)
 
@@ -68,7 +69,7 @@ func TestAmendBuy(t *testing.T) {
 	ap := NewOrderAppender()
 	ap.Append(book, order1)
 
-	am := NewOrderAmender()
+	am := NewOrderAmender(&mocks.MockPublisher{})
 
 	order2 := models.NewOrder(order1.ID, "TT", 199.99, 10, models.Buy)
 
@@ -91,7 +92,7 @@ func TestAmendSell(t *testing.T) {
 	ap := NewOrderAppender()
 	ap.Append(book, order1)
 
-	am := NewOrderAmender()
+	am := NewOrderAmender(&mocks.MockPublisher{})
 
 	order2 := models.NewOrder(order1.ID, "TT", 199.99, 10, models.Sell)
 
