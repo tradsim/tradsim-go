@@ -71,7 +71,7 @@ func TestAmendBuy(t *testing.T) {
 
 	am := NewOrderAmender(&mocks.MockPublisher{})
 
-	order2 := models.NewOrder(order1.ID, "TT", 199.99, 10, models.Buy)
+	order2 := models.NewOrder(order1.ID, "TT", 199.99, 20, models.Buy)
 
 	prices, _ := book.Symbols["TT"]
 
@@ -94,7 +94,7 @@ func TestAmendSell(t *testing.T) {
 
 	am := NewOrderAmender(&mocks.MockPublisher{})
 
-	order2 := models.NewOrder(order1.ID, "TT", 199.99, 10, models.Sell)
+	order2 := models.NewOrder(order1.ID, "TT", 199.99, 20, models.Sell)
 
 	prices, _ := book.Symbols["TT"]
 

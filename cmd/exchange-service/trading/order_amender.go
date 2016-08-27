@@ -1,6 +1,7 @@
 package trading
 
 import (
+	"errors"
 	"log"
 	"sync"
 	"time"
@@ -53,9 +54,17 @@ func (oa *OrderAmender) Amend(book *models.OrderBook, order *models.Order) bool 
 		for _, o := range prices[i].Buy.Orders {
 
 			if o.ID == order.ID {
-				prices[i].Buy.Quantity += order.Quantity
-				o.Amend(order.Quantity)
+
+				d, err := oa.getAmendQuantity(o.Quantity, order.Quantity)
+				if err != nil {
+					log.Printf("%s", err)
+					break
+				}
+
+				prices[i].Buy.Quantity += d
+				o.Amend(d)
 				amended = true
+				break
 			}
 		}
 
@@ -64,9 +73,17 @@ func (oa *OrderAmender) Amend(book *models.OrderBook, order *models.Order) bool 
 		for _, o := range prices[i].Sell.Orders {
 
 			if o.ID == order.ID {
-				prices[i].Sell.Quantity += order.Quantity
-				o.Amend(order.Quantity)
+
+				d, err := oa.getAmendQuantity(o.Quantity, order.Quantity)
+				if err != nil {
+					log.Printf("%s", err)
+					break
+				}
+
+				prices[i].Sell.Quantity += d
+				o.Amend(d)
 				amended = true
+				break
 			}
 		}
 	}
@@ -91,4 +108,12 @@ func (oa *OrderAmender) publishAmendEvent(ID uuid.UUID, quantity uint) {
 	if err != nil {
 		log.Printf("Failed to publish cancelled event: %s", ev.String())
 	}
+}
+
+func (oa *OrderAmender) getAmendQuantity(orig uint, amend uint) (uint, error) {
+	if orig >= amend {
+		return 0, errors.New("Amend quantity less or equal than orders")
+	}
+
+	return amend - orig, nil
 }
