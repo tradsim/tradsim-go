@@ -32,7 +32,7 @@ func NewOrderEventProcessor(url string, subExchange string, subQueue string, pub
 	return &OrderEventProcessor{url, subExchange, subQueue, pubExchange, nil, nil, nil, processor}
 }
 
-// Open handles the opening of connection, channel, echange and queue
+// Open handles the opening of connection, channel, exchange and queue
 func (p *OrderEventProcessor) Open() error {
 
 	conn, err := p.setupConnection(p.url)

@@ -24,6 +24,18 @@
             "program": "${workspaceRoot}/cmd/event-writer-service",
             "env": {},
             "args": []
+        },
+        {
+            "name": "Launch event aggegation service",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "remotePath": "",
+            "port": 2345,
+            "host": "127.0.0.1",
+            "program": "${workspaceRoot}/cmd/event-aggregation-service",
+            "env": {},
+            "args": []
         }
     ]
 }
