@@ -12,6 +12,7 @@ import (
 	"github.com/mantzas/incata/marshal"
 	"github.com/mantzas/incata/storage"
 	"github.com/mantzas/incata/writer"
+	uuid "github.com/satori/go.uuid"
 	"github.com/streadway/amqp"
 	"github.com/tradsim/tradsim-go/events"
 )
@@ -80,8 +81,35 @@ func processDelivery(d *amqp.Delivery) {
 	}
 
 	log.Printf("Received %s", event.EventType)
-
+	err = processStoredEvent(event)
+	if err != nil {
+		log.Fatalf("Failed to process stored event. %s", err)
+	}
 	d.Ack(false)
+}
+
+func processStoredEvent(event events.OrderEventStored) error {
+
+	sourceID, err := uuid.FromString(event.OrderID)
+	if err != nil {
+		return err
+	}
+
+	r, err := incata.NewRetriever()
+	if err != nil {
+		return err
+	}
+
+	_, err = r.Retrieve(sourceID)
+	if err != nil {
+		return err
+	}
+
+	// TODO: Aggregate Events
+
+	// TODO: Store order and position to db
+
+	return nil
 }
 
 func setupIncata(connection string, dbName string) {
@@ -104,6 +132,7 @@ func createSubscription(url string, exc string, qn string) (<-chan amqp.Delivery
 	if err != nil {
 		return nil, err
 	}
+
 	defer conn.Close()
 
 	ch, err := conn.Channel()

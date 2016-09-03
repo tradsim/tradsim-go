@@ -74,7 +74,7 @@ func TestSetStatus(t *testing.T) {
 
 	for _, c := range cases {
 		o := getOrder(2, c.in)
-		o.setStatus()
+		o.UpdateStatus()
 		require.Equal(c.out, o.Status)
 	}
 }

@@ -35,20 +35,21 @@ func (o *Order) Remaining() uint {
 // Amend order by quantity
 func (o *Order) Amend(q uint) {
 	o.Quantity += q
-	o.setStatus()
+	o.UpdateStatus()
 }
 
 // Trade order
 func (o *Order) Trade(q uint) {
 	o.Traded += q
-	o.setStatus()
+	o.UpdateStatus()
 }
 
 func (o *Order) String() string {
 	return fmt.Sprintf("[%s] %s@%f %s %d/%d/%d %s", o.ID, o.Symbol, o.Price, o.Direction.String(), o.Quantity, o.Traded, o.Remaining(), o.Status.String())
 }
 
-func (o *Order) setStatus() {
+// UpdateStatus updates the status based on the quantities
+func (o *Order) UpdateStatus() {
 	if o.Traded == uint(0) {
 		o.Status = Pending
 	} else if o.Traded < o.Quantity {
