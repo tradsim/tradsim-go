@@ -13,6 +13,7 @@ import (
 	"github.com/mantzas/incata/storage"
 	"github.com/mantzas/incata/writer"
 	"github.com/streadway/amqp"
+	"github.com/tradsim/tradsim-go/cmd/event-aggregation-service/aggregator"
 	"github.com/tradsim/tradsim-go/cmd/event-aggregation-service/processor"
 	"github.com/tradsim/tradsim-go/events"
 )
@@ -49,7 +50,8 @@ func main() {
 		log.Fatalf("Failed to create event retriever! %s", err)
 	}
 
-	prc := processor.NewEventProcessor(rt)
+	agg := aggregator.NewEventAggregator()
+	prc := processor.NewEventProcessor(rt, agg)
 
 	forever := make(chan bool)
 
