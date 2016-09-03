@@ -1,2 +1,2 @@
 # tradsim-go
-Trading Simulator go repositoty
+Trading Simulator go repository
