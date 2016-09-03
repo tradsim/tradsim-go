@@ -6,8 +6,9 @@ import (
 
 	incmodel "github.com/mantzas/incata/model"
 	uuid "github.com/satori/go.uuid"
+	"github.com/tradsim/tradsim-go/cmd/event-aggregation-service/models"
 	"github.com/tradsim/tradsim-go/events"
-	"github.com/tradsim/tradsim-go/models"
+	commonmodels "github.com/tradsim/tradsim-go/models"
 )
 
 // Aggregator interface
@@ -19,8 +20,8 @@ type Aggregator interface {
 type EventAggregator struct {
 }
 
-// NewAggregator creates a new aggregator
-func NewAggregator() *EventAggregator {
+// NewEventAggregator creates a new event aggregator
+func NewEventAggregator() *EventAggregator {
 	return &EventAggregator{}
 }
 
@@ -65,7 +66,7 @@ func aggregateAccepted(o *models.Order, ev incmodel.Event) error {
 		return fmt.Errorf("type assertion to %s failed", ev.EventType)
 	}
 
-	dir, err := models.TradeDirectionFromString(accepted.Direction)
+	dir, err := commonmodels.TradeDirectionFromString(accepted.Direction)
 	if err != nil {
 		return err
 	}
@@ -75,14 +76,9 @@ func aggregateAccepted(o *models.Order, ev incmodel.Event) error {
 		return err
 	}
 
-	o.ID = orderID
-	o.Symbol = accepted.Symbol
-	o.Price = accepted.Price
-	o.Quantity = accepted.Quantity
-	o.Traded = 0
-	o.Direction = dir
-	o.Status = models.Pending
-	log.Printf("Accepted aggregation succeeded. %s", o.String())
+	*o = *models.NewOrder(orderID, accepted.Symbol, accepted.Price, accepted.Quantity, dir, commonmodels.Pending, accepted.Occured)
+
+	log.Printf("Accepted aggregation succeeded. %v", o)
 	return nil
 }
 
@@ -91,19 +87,18 @@ func aggregateAmended(o *models.Order, ev incmodel.Event) error {
 	if !ok {
 		return fmt.Errorf("type assertion to %s failed", ev.EventType)
 	}
-	o.Quantity = amended.Quantity
-	o.UpdateStatus()
-	log.Printf("Amended aggregation succeeded. %s", o.String())
+	o.Amend(amended.Quantity, amended.Occured)
+	log.Printf("Amended aggregation succeeded. %v", o)
 	return nil
 }
 
 func aggregateCanceled(o *models.Order, ev incmodel.Event) error {
-	_, ok := ev.Payload.(events.OrderCancelled)
+	cancelled, ok := ev.Payload.(events.OrderCancelled)
 	if !ok {
 		return fmt.Errorf("type assertion to %s failed", ev.EventType)
 	}
-	o.Status = models.Cancelled
-	log.Printf("Canceled aggregation succeeded. %s", o.String())
+	o.Cancel(cancelled.Occured)
+	log.Printf("Canceled aggregation succeeded. %v", o)
 	return nil
 }
 
@@ -112,7 +107,7 @@ func aggregateTraded(o *models.Order, ev incmodel.Event) error {
 	if !ok {
 		return fmt.Errorf("type assertion to %s failed", ev.EventType)
 	}
-	o.Trade(traded.Quantity)
-	log.Printf("Traded aggregation succeeded. %s", o.String())
+	o.Trade(traded.Price, traded.Quantity, traded.Occured)
+	log.Printf("Traded aggregation succeeded. %v", o)
 	return nil
 }

@@ -12,8 +12,8 @@ import (
 	"github.com/mantzas/incata/marshal"
 	"github.com/mantzas/incata/storage"
 	"github.com/mantzas/incata/writer"
-	uuid "github.com/satori/go.uuid"
 	"github.com/streadway/amqp"
+	"github.com/tradsim/tradsim-go/cmd/event-aggregation-service/processor"
 	"github.com/tradsim/tradsim-go/events"
 )
 
@@ -44,12 +44,20 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create subscription! %s", err)
 	}
+	rt, err := incata.NewRetriever()
+	if err != nil {
+		log.Fatalf("Failed to create event retriever! %s", err)
+	}
+
+	prc := processor.NewEventProcessor(rt)
 
 	forever := make(chan bool)
 
 	go func() {
-		for d := range msgs {
-			processDelivery(&d)
+		for msg := range msgs {
+			go func(prc processor.Processor, msg *amqp.Delivery) {
+				processDelivery(prc, msg)
+			}(prc, &msg)
 		}
 	}()
 
@@ -58,7 +66,7 @@ func main() {
 	log.Fatal("Event aggregation service stopped unexpectedly.")
 }
 
-func processDelivery(d *amqp.Delivery) {
+func processDelivery(prc processor.Processor, d *amqp.Delivery) {
 	var env events.OrderEventEnvelope
 
 	err := json.Unmarshal(d.Body, &env)
@@ -81,35 +89,12 @@ func processDelivery(d *amqp.Delivery) {
 	}
 
 	log.Printf("Received %s", event.EventType)
-	err = processStoredEvent(event)
+
+	err = prc.Process(event)
 	if err != nil {
 		log.Fatalf("Failed to process stored event. %s", err)
 	}
 	d.Ack(false)
-}
-
-func processStoredEvent(event events.OrderEventStored) error {
-
-	sourceID, err := uuid.FromString(event.OrderID)
-	if err != nil {
-		return err
-	}
-
-	r, err := incata.NewRetriever()
-	if err != nil {
-		return err
-	}
-
-	_, err = r.Retrieve(sourceID)
-	if err != nil {
-		return err
-	}
-
-	// TODO: Aggregate Events
-
-	// TODO: Store order and position to db
-
-	return nil
 }
 
 func setupIncata(connection string, dbName string) {

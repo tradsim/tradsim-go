@@ -25,7 +25,7 @@ func TestAggregationSuccess(t *testing.T) {
 		*incmodel.NewEvent(orderID, time.Now().UTC(), *amended, string(amended.EventType), 1),
 		*incmodel.NewEvent(orderID, time.Now().UTC(), *cancelled, string(cancelled.EventType), 1)}
 
-	ag := NewAggregator()
+	ag := NewEventAggregator()
 
 	o, err := ag.Aggregate(evs)
 
@@ -43,7 +43,7 @@ func TestAggregationInvalidEventSuccess(t *testing.T) {
 
 	evs := []incmodel.Event{*incmodel.NewEvent(orderID, time.Now().UTC(), *stored, string(stored.EventType), 1)}
 
-	ag := NewAggregator()
+	ag := NewEventAggregator()
 
 	_, err = ag.Aggregate(evs)
 

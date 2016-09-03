@@ -67,3 +67,15 @@ func OrderStatusFromString(value string) (OrderStatus, error) {
 		return 9, fmt.Errorf("Not mapped %s", value)
 	}
 }
+
+// ResolveStatus resolves the status based on the quantities
+func ResolveStatus(q uint, t uint) OrderStatus {
+	if t == uint(0) {
+		return Pending
+	} else if t < q {
+		return PartiallyFilled
+	} else if t == q {
+		return FullyFilled
+	}
+	return OverFilled
+}

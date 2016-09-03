@@ -58,27 +58,6 @@ func TestTrade(t *testing.T) {
 	require.Equal(PartiallyFilled, order.Status)
 }
 
-func TestSetStatus(t *testing.T) {
-
-	var cases = []struct {
-		in  uint
-		out OrderStatus
-	}{
-		{0, Pending},
-		{1, PartiallyFilled},
-		{2, FullyFilled},
-		{3, OverFilled},
-	}
-
-	require := require.New(t)
-
-	for _, c := range cases {
-		o := getOrder(2, c.in)
-		o.UpdateStatus()
-		require.Equal(c.out, o.Status)
-	}
-}
-
 func getOrder(quantity uint, traded uint) *Order {
 
 	u, _ := uuid.FromString("d1de4242-6620-4030-b2a7-4a701631c3ba")

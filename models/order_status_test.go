@@ -94,3 +94,23 @@ func TestOrderStatusFromString(t *testing.T) {
 		}
 	}
 }
+
+func TestResolveStatus(t *testing.T) {
+
+	var cases = []struct {
+		in  uint
+		out OrderStatus
+	}{
+		{0, Pending},
+		{1, PartiallyFilled},
+		{2, FullyFilled},
+		{3, OverFilled},
+	}
+
+	require := require.New(t)
+
+	for _, c := range cases {
+
+		require.Equal(c.out, ResolveStatus(2, c.in))
+	}
+}
