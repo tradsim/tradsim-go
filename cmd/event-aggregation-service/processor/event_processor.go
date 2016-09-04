@@ -15,11 +15,11 @@ type Processor interface {
 // EventProcessor processes stored events
 type EventProcessor struct {
 	evr incata.Retriever
-	agg aggregator.Aggregator
+	agg aggregator.EventAggregator
 }
 
 // NewEventProcessor creates a new event processor
-func NewEventProcessor(evr incata.Retriever, agg aggregator.Aggregator) *EventProcessor {
+func NewEventProcessor(evr incata.Retriever, agg aggregator.EventAggregator) *EventProcessor {
 	return &EventProcessor{evr, agg}
 }
 
