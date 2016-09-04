@@ -11,22 +11,22 @@ import (
 	commonmodels "github.com/tradsim/tradsim-go/models"
 )
 
-// Aggregator interface
-type Aggregator interface {
+// EventAggregator interface
+type EventAggregator interface {
 	Aggregate(events []incmodel.Event) (models.Order, error)
 }
 
-// EventAggregator aggregates events to order
-type EventAggregator struct {
+// StorageEventAggregator aggregates events to order
+type StorageEventAggregator struct {
 }
 
 // NewEventAggregator creates a new event aggregator
-func NewEventAggregator() *EventAggregator {
-	return &EventAggregator{}
+func NewEventAggregator() *StorageEventAggregator {
+	return &StorageEventAggregator{}
 }
 
 // Aggregate events to a order
-func (ea EventAggregator) Aggregate(evs []incmodel.Event) (models.Order, error) {
+func (ea StorageEventAggregator) Aggregate(evs []incmodel.Event) (models.Order, error) {
 	var or models.Order
 
 	for _, ev := range evs {

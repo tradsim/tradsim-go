@@ -41,6 +41,8 @@ func (ep *EventProcessor) Process(event events.OrderEventStored) error {
 		return err
 	}
 
+	// TODO: Calculate position
+
 	// TODO: Store order and position to db
 
 	return nil
