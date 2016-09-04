@@ -33,6 +33,12 @@ func TestAggregationSuccess(t *testing.T) {
 	require.Equal(models.Cancelled, o.Status)
 	require.Equal(uint(20), o.Quantity)
 	require.Equal(uint(10), o.Traded)
+	require.Len(o.Logs, 4)
+	require.Equal(string(events.OrderAcceptedType), o.Logs[0].Action)
+	require.Equal(string(events.OrderTradedType), o.Logs[1].Action)
+	require.Equal(string(events.OrderAmendedType), o.Logs[2].Action)
+	require.Equal(string(events.OrderCancelledType), o.Logs[3].Action)
+	require.Len(o.Trades, 1)
 }
 
 func TestAggregationInvalidEventSuccess(t *testing.T) {

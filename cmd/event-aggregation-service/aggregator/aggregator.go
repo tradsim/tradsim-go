@@ -78,7 +78,7 @@ func aggregateAccepted(o *models.Order, ev incmodel.Event) error {
 
 	*o = *models.NewOrder(orderID, accepted.Symbol, accepted.Price, accepted.Quantity, dir, commonmodels.Pending, accepted.Occured)
 
-	log.Printf("Accepted aggregation succeeded. %v", o)
+	log.Print("Accepted aggregation succeeded")
 	return nil
 }
 
@@ -88,7 +88,7 @@ func aggregateAmended(o *models.Order, ev incmodel.Event) error {
 		return fmt.Errorf("type assertion to %s failed", ev.EventType)
 	}
 	o.Amend(amended.Quantity, amended.Occured)
-	log.Printf("Amended aggregation succeeded. %v", o)
+	log.Print("Amended aggregation succeeded")
 	return nil
 }
 
@@ -98,7 +98,7 @@ func aggregateCanceled(o *models.Order, ev incmodel.Event) error {
 		return fmt.Errorf("type assertion to %s failed", ev.EventType)
 	}
 	o.Cancel(cancelled.Occured)
-	log.Printf("Canceled aggregation succeeded. %v", o)
+	log.Print("Canceled aggregation succeeded")
 	return nil
 }
 
@@ -108,6 +108,6 @@ func aggregateTraded(o *models.Order, ev incmodel.Event) error {
 		return fmt.Errorf("type assertion to %s failed", ev.EventType)
 	}
 	o.Trade(traded.Price, traded.Quantity, traded.Occured)
-	log.Printf("Traded aggregation succeeded. %v", o)
+	log.Print("Traded aggregation succeeded")
 	return nil
 }
