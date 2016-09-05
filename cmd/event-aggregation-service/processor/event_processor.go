@@ -4,6 +4,7 @@ import (
 	"github.com/mantzas/incata"
 	uuid "github.com/satori/go.uuid"
 	"github.com/tradsim/tradsim-go/cmd/event-aggregation-service/aggregator"
+	"github.com/tradsim/tradsim-go/cmd/event-aggregation-service/data"
 	"github.com/tradsim/tradsim-go/events"
 )
 
@@ -14,13 +15,16 @@ type Processor interface {
 
 // EventProcessor processes stored events
 type EventProcessor struct {
-	evr incata.Retriever
-	agg aggregator.EventAggregator
+	evr   incata.Retriever
+	evagg aggregator.EventAggregator
+	oragg aggregator.OrderAggregator
+	repo  data.OrderRepository
 }
 
 // NewEventProcessor creates a new event processor
-func NewEventProcessor(evr incata.Retriever, agg aggregator.EventAggregator) *EventProcessor {
-	return &EventProcessor{evr, agg}
+func NewEventProcessor(evr incata.Retriever, evagg aggregator.EventAggregator,
+	oragg aggregator.OrderAggregator, repo data.OrderRepository) *EventProcessor {
+	return &EventProcessor{evr, evagg, oragg, repo}
 }
 
 // Process the stored event
@@ -36,12 +40,17 @@ func (ep *EventProcessor) Process(event events.OrderEventStored) error {
 		return err
 	}
 
-	_, err = ep.agg.Aggregate(events)
+	or, err := ep.evagg.Aggregate(events)
 	if err != nil {
 		return err
 	}
 
-	// TODO: Calculate position
+	orders, err := ep.repo.GetOrders()
+	if err != nil {
+		return err
+	}
+
+	_ = ep.oragg.Aggregate(or.Symbol, orders)
 
 	// TODO: Store order and position to db
 

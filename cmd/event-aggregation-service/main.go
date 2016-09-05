@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"log"
 	"os"
@@ -10,10 +11,11 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/mantzas/incata"
 	"github.com/mantzas/incata/marshal"
+	"github.com/mantzas/incata/reader"
 	"github.com/mantzas/incata/storage"
-	"github.com/mantzas/incata/writer"
 	"github.com/streadway/amqp"
 	"github.com/tradsim/tradsim-go/cmd/event-aggregation-service/aggregator"
+	"github.com/tradsim/tradsim-go/cmd/event-aggregation-service/data"
 	"github.com/tradsim/tradsim-go/cmd/event-aggregation-service/processor"
 	"github.com/tradsim/tradsim-go/events"
 )
@@ -23,14 +25,15 @@ func main() {
 	var url = "amqp://guest:guest@localhost:5672/tradsim"
 	var qn = "order_event_stored"
 	var exc = "order_event_stored"
-	var connectionString = "postgres://postgres:1234@localhost/orderevents?sslmode=disable"
+	var evCon = "postgres://postgres:1234@localhost/orderevents?sslmode=disable"
 	var dbName = "orderevents"
+	var orCon = "postgres://postgres:1234@localhost/order?sslmode=disable"
 
 	log.SetOutput(os.Stdout)
 	log.SetFlags(log.Ldate | log.Lmicroseconds | log.LUTC | log.Lshortfile)
 	log.SetPrefix("eas ")
 
-	setupIncata(connectionString, dbName)
+	setupIncata(evCon, dbName)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
@@ -50,8 +53,19 @@ func main() {
 		log.Fatalf("Failed to create event retriever! %s", err)
 	}
 
-	agg := aggregator.NewEventAggregator()
-	prc := processor.NewEventProcessor(rt, agg)
+	orDB, err := getOrderDb(orCon)
+	if err != nil {
+		log.Fatalf("Failed to connect to order db! %s", err)
+	}
+
+	repo, err := data.NewOrderRepository(orDB)
+	if err != nil {
+		log.Fatalf("Failed to create order repo! %s", err)
+	}
+
+	evagg := aggregator.NewEventAggregator()
+	oragg := aggregator.NewOrderAggregator()
+	prc := processor.NewEventProcessor(rt, evagg, oragg, repo)
 
 	forever := make(chan bool)
 
@@ -108,9 +122,24 @@ func setupIncata(connection string, dbName string) {
 	}
 
 	sr := marshal.NewJSONMarshaller()
-	wr := writer.NewSQLWriter(storage, sr)
+	rd := reader.NewSQLReader(storage, sr)
 
-	incata.SetupAppender(wr)
+	incata.SetupRetriever(rd)
+}
+
+func getOrderDb(cn string) (*sql.DB, error) {
+
+	db, err := sql.Open("postgres", cn)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = db.Ping(); err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	return db, nil
 }
 
 func createSubscription(url string, exc string, qn string) (<-chan amqp.Delivery, error) {

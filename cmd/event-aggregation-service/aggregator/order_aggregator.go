@@ -45,5 +45,5 @@ func (oa OrderAggregatorImpl) Aggregate(s string, orders []models.Order) models.
 		}
 	}
 
-	return models.Position{s, q, t}
+	return models.Position{0, s, q, t}
 }

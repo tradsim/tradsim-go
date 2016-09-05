@@ -8,19 +8,6 @@ import (
 	"github.com/tradsim/tradsim-go/models"
 )
 
-// OrderLog defines a order log
-type OrderLog struct {
-	Action  string
-	Occured time.Time
-}
-
-// Trade defines a trade
-type Trade struct {
-	Price    float64
-	Quantity uint
-	Occured  time.Time
-}
-
 // Order defines the order state
 type Order struct {
 	ID          uuid.UUID
@@ -47,7 +34,7 @@ func NewOrder(id uuid.UUID, symbol string, price float64, quantity uint, directi
 // Trade appends trade to order and updates order
 func (o *Order) Trade(p float64, q uint, t time.Time) {
 	o.Traded += q
-	o.Trades = append(o.Trades, Trade{p, q, t})
+	o.Trades = append(o.Trades, Trade{0, o.ID, p, q, t})
 	o.updateTradedPrice()
 	o.Status = models.ResolveStatus(o.Quantity, o.Traded)
 	o.Updated = t
@@ -70,7 +57,7 @@ func (o *Order) Cancel(t time.Time) {
 }
 
 func (o *Order) appendLog(a string, t time.Time) {
-	o.Logs = append(o.Logs, OrderLog{a, t})
+	o.Logs = append(o.Logs, OrderLog{0, o.ID, a, t})
 }
 
 func (o *Order) updateTradedPrice() {
